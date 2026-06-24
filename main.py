@@ -1,49 +1,56 @@
-from flask import Flask
+from flask import Flask, request
 from plurk_oauth import PlurkAPI
-import os
-import time
+import os, threading, time
 
 app = Flask(__name__)
+plurk = PlurkAPI(os.environ.get('PLURK_APP_KEY'), os.environ.get('PLURK_APP_SECRET'))
+plurk.set_token(None, None) # 先清空
 
-# 這些等等去 Render 的 Environment 設定
-plurk = PlurkAPI(
-    os.environ.get('PLURK_APP_KEY'),
-    os.environ.get('PLURK_APP_SECRET'),
-    os.environ.get('PLURK_OAUTH_TOKEN'),
-    os.environ.get('PLURK_OAUTH_TOKEN_SECRET')
-)
-
-# Render 喚醒用，免得睡死
 @app.route('/')
 def home():
-    return '我活著！AI小助手運作中'
+    return 'AI小助手活著！<br><a href="/login">點我授權機器人</a>'
 
-# 最簡單的版本：每30秒檢查一次有沒有人@我
-def check_mentions():
-    last_checked = None
+@app.route('/login')
+def login():
+    # 取得授權網址
+    request_token = plurk.get_request_token()
+    auth_url = plurk.get_authorization_url(request_token)
+    # 把 token 先存起來等下用
+    plurk.set_request_token(request_token['oauth_token'], request_token['oauth_token_secret'])
+    return f'請用機器人帳號 AI_Anchor 登入，然後點這個連結授權：<br><a href="{auth_url}">{auth_url}</a>'
+
+@app.route('/callback')
+def callback():
+    verifier = request.args.get('oauth_verifier')
+    access_token = plurk.get_access_token(verifier)
+    return f'''
+    授權成功！把這兩行複製到 Render 的 Environment：<br><br>
+    PLURK_OAUTH_TOKEN = {access_token['oauth_token']}<br>
+    PLURK_OAUTH_TOKEN_SECRET = {access_token['oauth_token_secret']}<br><br>
+    複製完就可以關掉這頁了
+    '''
+
+def bot_loop():
+    time.sleep(10) # 等環境變數設定好
+    plurk = PlurkAPI(
+        os.environ.get('PLURK_APP_KEY'),
+        os.environ.get('PLURK_APP_SECRET'),
+        os.environ.get('PLURK_OAUTH_TOKEN'),
+        os.environ.get('PLURK_OAUTH_TOKEN_SECRET')
+    )
     while True:
         try:
-            plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 5})
-            if plurks and 'plurks' in plurks:
-                for p in plurks['plurks']:
-                    # 只回覆比上次新的，而且有@我的
-                    if last_checked is None or p['posted'] > last_checked:
-                        if '@plurk-ai-bot-meta' in p['content_raw'].lower(): # 改成你的機器人帳號
-                            reply_text = f"@{p['owner_id']} 嗨！我是 AI 小助手，你剛說：{p['content_raw']}"
-                            plurk.callAPI('/APP/Responses/responseAdd', {
-                                'plurk_id': p['plurk_id'],
-                                'content': reply_text,
-                                'qualifier': 'says'
-                            })
-                if plurks['plurks']:
-                    last_checked = plurks['plurks'][0]['posted']
-        except Exception as e:
-            print(f"出錯了: {e}")
-        time.sleep(30)
+            data = plurk.callAPI('/APP/Alerts/getActive')
+            for alert in data:
+                if alert['type'] == 'mentioned':
+                    plurk.callAPI('/APP/Responses/responseAdd', {
+                        'plurk_id': alert['plurk_id'],
+                        'content': f"@{alert['from_user']['nick_name']} 你好！我是AI小助手，你剛@我了。功能測試中～",
+                        'qualifier': 'says'
+                    })
+        except: pass
+        time.sleep(20)
 
-# 讓 Render 知道要跑這個
 if __name__ == '__main__':
-    import threading
-    t = threading.Thread(target=check_mentions)
-    t.start()
+    threading.Thread(target=bot_loop).start()
     app.run(host='0.0.0.0', port=10000)
