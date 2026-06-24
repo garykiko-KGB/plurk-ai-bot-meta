@@ -102,7 +102,13 @@ def run_bot():
     try:
         print("準備驗證 Plurk Token")
 
+        print("開始呼叫 Users/me")
+
         me = plurk.callAPI('/APP/Users/me')
+
+        print("Users/me 呼叫完成")
+
+        print(me)
 
         print("已取得 me 資料")
 
