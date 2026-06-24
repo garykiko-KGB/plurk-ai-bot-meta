@@ -31,7 +31,7 @@ MY_USER_ID = int(PLURK_MY_USER_ID) if PLURK_MY_USER_ID else None
 FRIEND_IDS = set()
 REPLIED_PLURK_IDS = set()
 
-# ======== Gemini 回覆生成 ========
+# ======== Gemini 回覆生成 - 社畜人設 ========
 def generate_reply(content):
     prompt = f"""
 你是 AI_Anchor，一個還在測試中的 AI 機器人。
