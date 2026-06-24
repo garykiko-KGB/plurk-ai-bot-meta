@@ -16,27 +16,27 @@ def home():
 
 @app.route('/login')
 def login():
-    try:
-        # 讓 plurk-oauth 把原始 HTTP 回應吐出來
-        request_token = plurk.callAPI('/OAuth/request_token')
-        auth_url = f"https://www.plurk.com/OAuth/authorize?oauth_token={request_token['oauth_token']}"
-        app.config['REQUEST_TOKEN'] = request_token
-        return redirect(auth_url)
-    except Exception as e:
-        # 把 Plurk 回的原始錯誤抓出來
-        error_msg = str(e)
-        key = os.environ.get('PLURK_APP_KEY')
-        secret = os.environ.get('PLURK_APP_SECRET')
-        
-        return f'''
-        <h3>Plurk 回應錯誤</h3>
-        錯誤訊息: <pre>{error_msg}</pre><br>
-        你傳給 Plurk 的 KEY: {key}<br>
-        你傳給 Plurk 的 SECRET: {secret[:6]}...{secret[-6:]}<br><br>
-        
-        <b>下一步：去 Render Logs 看完整 traceback</b><br>
-        Render → Logs → 搜尋 'HTTP Error' 或 'Invalid'
-        '''
+    import requests
+    from requests_oauthlib import OAuth1
+    
+    key = os.environ.get('PLURK_APP_KEY')
+    secret = os.environ.get('PLURK_APP_SECRET')
+    
+    # 直接打 Plurk 的 request_token 接口
+    auth = OAuth1(key, secret, callback_uri='https://plurk-ai-bot-meta.onrender.com/callback')
+    r = requests.post('https://www.plurk.com/OAuth/request_token', auth=auth)
+    
+    # 不管成功失敗，都把 Plurk 原始回應印出來
+    return f'''
+    <h3>Plurk 原始回應</h3>
+    HTTP 狀態碼: {r.status_code}<br>
+    回應內容: <pre>{r.text}</pre><br><br>
+    
+    <b>你 Render 用的 KEY:</b> {key}<br>
+    <b>你 Render 用的 SECRET:</b> {secret}<br><br>
+    
+    把這個頁面截圖給我
+    '''
 
 @app.route('/callback')
 def callback():
