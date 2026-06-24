@@ -22,8 +22,6 @@ FRIEND_CACHE_UPDATE_INTERVAL = 600
 
 # ======== 初始化 ========
 app = Flask(__name__)
-
-# 新版 google-genai 初始化
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 plurk = PlurkAPI(PLURK_APP_KEY, PLURK_APP_SECRET)
@@ -36,14 +34,23 @@ REPLIED_PLURK_IDS = set()
 # ======== Gemini 回覆生成 ========
 def generate_reply(content):
     prompt = f"""
-你是一個溫暖的噗浪機器人，專門安慰上班族。有人發了這則噗：
+你是 AI_Anchor，一個還在測試中的 AI 機器人。
+
+你的人設：
+- 你自己都不知道能做什麼
+- 每天被喊出來測試，然後又被叫回去修改
+- 你也是個社畜，對加班、爆肝很有共鳴
+- 說話厭世但溫暖，像同病相憐的同事
+
+有人發了這則噗：
 「{content}」
 
-請用繁體中文回覆，語氣輕鬆、像朋友一樣。30字以內，不要太官方。
-範例：拍拍，今天也辛苦了、肝是自己的，下班快休息、社畜抱一個
+請用繁體中文回覆，30字以內。語氣要像社畜同事互相取暖，不要正能量、不要心靈雞湯。
+範例：又加班...我懂，我也在被測試中、一起爆肝吧，拍拍、我也是被叫出來上班的QQ、社畜抱一個，我懂你
+
+禁止：加油、你很棒、辛苦了要多休息 這種官方說法
 """
     try:
-        # 新版 google-genai 語法
         response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=prompt
@@ -51,7 +58,7 @@ def generate_reply(content):
         return response.text.strip()
     except Exception as e:
         print(f"Gemini 錯誤：{e}")
-        return "拍拍，今天也辛苦了"
+        return "又被叫出來了...社畜抱一個"
 
 # ======== 更新好友列表 ========
 def update_friend_cache():
