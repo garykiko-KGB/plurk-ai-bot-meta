@@ -97,6 +97,21 @@ def check_friend_requests():
 
 # ======== 主迴圈 ========
 def run_bot():
+    print("測試 requests")
+
+    try:
+        r = requests.get(
+            "https://www.plurk.com/APP/Users/me",
+            timeout=10
+        )
+
+        print("requests 完成")
+        print(f"HTTP: {r.status_code}")
+        print(r.text[:300])
+
+    except Exception as e:
+        print(f"requests 失敗: {e}")
+        
     print("社畜 Bot 啟動中...")
     
     try:
