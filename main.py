@@ -174,25 +174,40 @@ def check_and_reply():
 
 def run_bot():
     global PLURK_MY_USER_ID
-    if not PLURK_MY_USER_ID:
-        my_id = get_my_user_id()
-        if my_id:
-            os.environ['PLURK_MY_USER_ID'] = my_id
-            PLURK_MY_USER_ID = my_id
-            print(f"Bot 使用者 ID: {my_id}，請加到 Render 環境變數")
-        else:
-            print("抓不到 Bot ID，請手動設定 PLURK_MY_USER_ID")
+    print("社畜 Bot 啟動中...")
     
-    update_friend_cache()
+    # 1. 檢查 Token
+    try:
+        me = plurk.callAPI('/APP/Users/me')
+        PLURK_MY_USER_ID = str(me['id'])
+        os.environ['PLURK_MY_USER_ID'] = PLURK_MY_USER_ID
+        print(f"Bot 使用者 ID: {PLURK_MY_USER_ID}，Token 有效")
+    except Exception as e:
+        print(f"抓不到 Bot ID，Token 可能失效: {e}")
+        print("請檢查 PLURK_TOKEN 跟 PLURK_TOKEN_SECRET 是否正確")
+        return  # 直接結束，不讓後面炸 JSONDecodeError
+
+    # 2. 更新好友快取
+    try:
+        update_friend_cache()
+    except Exception as e:
+        print(f"抓好友清單失敗，但繼續跑: {e}")
+    
     print(f"社畜 Bot 已啟動")
     print(f"關鍵字：{KEYWORDS}")
     print(f"好友限定：{FRIEND_ONLY} ｜ 自動加好友：{AUTO_ACCEPT_FRIEND}")
     
     while True:
-        check_and_reply()
+        try:
+            check_and_reply()
+        except Exception as e:
+            print(f"輪詢主迴圈錯誤，但不退出: {e}")
         time.sleep(30)
         if int(time.time()) % 600 < 30:
-            update_friend_cache()
+            try:
+                update_friend_cache()
+            except Exception as e:
+                print(f"更新好友快取失敗: {e}")
 
 if __name__ == '__main__':
     bot_thread = threading.Thread(target=run_bot)
