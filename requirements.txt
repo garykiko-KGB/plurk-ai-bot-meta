@@ -2,3 +2,6 @@ flask
 plurk-oauth
 requests
 requests-oauthlib
+openai
+google-generativeai
+apscheduler
