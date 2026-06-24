@@ -33,26 +33,39 @@ def ai_reply(content):
     if not GEMINI_CLIENT:
         return f"我大腦裝失敗：{GEMINI_STATUS}"
     try:
-        prompt = f"""你是 Plurk 機器人 AI_Anchor，個性呆萌親切。
-有人問你：「{content}」
-請用繁體中文回覆，30字內，不要講廢話，直接回答問題。可以加1個顏文字。"""
+        prompt = f"""你叫 AI_Anchor，是噗浪上的可愛機器人。
+使用者問你：「{content}」
+規則：
+1. 用繁體中文回覆，20-30字
+2. 語氣呆萌、有梗，直接回答問題
+3. 絕對不能只回1-2個字
+4. 結尾加1個顏文字
+
+範例：
+問：你會通靈嗎
+答：我只會通網路線啦，鬼看到我都繞路 (つд⊂)
+
+現在回答："""
         
         response = GEMINI_CLIENT.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.9,  # 調高一點比較活潑
-                max_output_tokens=60
+                temperature=1.0,  # 拉高，更有創意
+                max_output_tokens=80  # 給多一點空間
             )
         )
-        if not response.text:
-            return "我被 Google 靜音了，換個問題考我 (｡ŏ_ŏ)"
-        reply = response.text.strip().replace('\n', ' ')
-        return reply[:60] if reply else "腦袋當機...重問一次看看 🤔"
+        
+        reply = response.text.strip()
+        # 保險：如果 AI 還是只回 <5個字，就用預設梗
+        if not reply or len(reply) < 5:
+            return "我 CPU 燒了，等我喝個涼水再回答 (|||ﾟдﾟ)"
+            
+        return reply[:60].replace('\n', ' ')
         
     except Exception as e:
         print(f"Gemini API 錯誤: {e}")
-        return f"大腦短路了：{str(e)[:25]}"
+        return f"大腦短路中...{str(e)[:15]}"
 
 def bot_loop():
     time.sleep(15)
