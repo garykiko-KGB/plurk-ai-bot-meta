@@ -4,7 +4,7 @@ import threading
 import requests
 from flask import Flask
 from plurk_oauth import PlurkAPI
-import google.generativeai as genai
+from google import genai
 
 # ======== 環境變數 ========
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -16,14 +16,15 @@ PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
 # ======== 設定區 ========
 KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職', '不想上班']
-REPLY_ONLY_TO_FRIENDS = True  # 只回好友
-AUTO_ADD_FRIEND = True  # 自動加好友
-FRIEND_CACHE_UPDATE_INTERVAL = 600  # 好友列表10分鐘更新一次
+REPLY_ONLY_TO_FRIENDS = True
+AUTO_ADD_FRIEND = True
+FRIEND_CACHE_UPDATE_INTERVAL = 600
 
 # ======== 初始化 ========
 app = Flask(__name__)
-genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
+# 新版 google-genai 初始化
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 plurk = PlurkAPI(PLURK_APP_KEY, PLURK_APP_SECRET)
 plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
@@ -42,7 +43,11 @@ def generate_reply(content):
 範例：拍拍，今天也辛苦了、肝是自己的，下班快休息、社畜抱一個
 """
     try:
-        response = gemini_model.generate_content(prompt)
+        # 新版 google-genai 語法
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         return response.text.strip()
     except Exception as e:
         print(f"Gemini 錯誤：{e}")
@@ -63,7 +68,6 @@ def check_friend_requests():
     if not AUTO_ADD_FRIEND:
         return
     try:
-        # 取得待處理的好友邀請
         requests_data = plurk.callAPI('/APP/FriendsFans/getFriendRequests')
         for req in requests_data:
             user_id = req['id']
@@ -81,7 +85,6 @@ def check_friend_requests():
 def run_bot():
     print("社畜 Bot 啟動中...")
     
-    # 驗證 Token
     try:
         me = plurk.callAPI('/APP/Users/me')
         global MY_USER_ID
@@ -101,15 +104,12 @@ def run_bot():
 
     while True:
         try:
-            # 定期更新好友列表
             if time.time() - last_friend_update > FRIEND_CACHE_UPDATE_INTERVAL:
                 update_friend_cache()
                 last_friend_update = time.time()
 
-            # 檢查好友邀請
             check_friend_requests()
 
-            # 抓取河道新噗
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
             
             for p in plurks:
@@ -117,15 +117,12 @@ def run_bot():
                 user_id = p['owner_id']
                 content = p.get('content_raw', '')
 
-                # 跳過自己跟已回覆的
                 if user_id == MY_USER_ID or plurk_id in REPLIED_PLURK_IDS:
                     continue
 
-                # 好友限定檢查
                 if REPLY_ONLY_TO_FRIENDS and user_id not in FRIEND_IDS:
                     continue
 
-                # 關鍵字檢查
                 if any(keyword in content for keyword in KEYWORDS):
                     reply_text = generate_reply(content)
                     try:
@@ -136,11 +133,11 @@ def run_bot():
                         })
                         print(f"已回覆 {plurk_id}：{reply_text}")
                         REPLIED_PLURK_IDS.add(plurk_id)
-                        time.sleep(3)  # 避免洗版太快
+                        time.sleep(3)
                     except Exception as e:
                         print(f"回覆失敗 {plurk_id}：{e}")
 
-            time.sleep(30)  # 每30秒檢查一次
+            time.sleep(30)
 
         except Exception as e:
             print(f"主迴圈錯誤：{e}")
@@ -157,9 +154,8 @@ def callback():
 
 # ======== 啟動 ========
 if __name__ == '__main__':
-    # 先用 thread 跑 bot，才不會被 Flask 卡住
-    threading.Thread(target=run_bot, daemon=True).start()
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
     
-    # Render 會自動給 PORT 環境變數
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
