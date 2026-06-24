@@ -15,10 +15,10 @@ PLURK_TOKEN_SECRET = os.environ.get('PLURK_TOKEN_SECRET')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 PLURK_MY_USER_ID = os.environ.get('PLURK_MY_USER_ID')
 
-# 初始化
+# 初始化 Plurk，只建物件不認證
 plurk = PlurkAPI(PLURK_APP_KEY, PLURK_APP_SECRET)
-plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
 
+# 初始化 Gemini
 try:
     GEMINI_CLIENT = genai.Client(api_key=GEMINI_API_KEY)
     GEMINI_STATUS = "已連線"
@@ -114,13 +114,6 @@ def ai_reply(content, mode="normal"):
         print(f"Gemini API 錯誤: {e}")
         return f"被老闆罵到短路...{str(e)[:15]}"
 
-def get_my_user_id():
-    try:
-        me = plurk.callAPI('/APP/Users/me')
-        return str(me['id'])
-    except:
-        return None
-
 def check_and_reply():
     auto_accept_friends()
     
@@ -176,18 +169,25 @@ def run_bot():
     global PLURK_MY_USER_ID
     print("社畜 Bot 啟動中...")
     
-    # 1. 檢查 Token
+    # 1. 認證 Token，放進 try 裡面才不會一啟動就炸
+    try:
+        plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
+        print("Plurk Token 認證成功")
+    except Exception as e:
+        print(f"Plurk Token 認證失敗: {e}")
+        print("請檢查 PLURK_APP_KEY, APP_SECRET, TOKEN, TOKEN_SECRET 是否正確")
+        return
+
+    # 2. 抓 Bot 自己的 ID
     try:
         me = plurk.callAPI('/APP/Users/me')
         PLURK_MY_USER_ID = str(me['id'])
-        os.environ['PLURK_MY_USER_ID'] = PLURK_MY_USER_ID
         print(f"Bot 使用者 ID: {PLURK_MY_USER_ID}，Token 有效")
     except Exception as e:
-        print(f"抓不到 Bot ID，Token 可能失效: {e}")
-        print("請檢查 PLURK_TOKEN 跟 PLURK_TOKEN_SECRET 是否正確")
-        return  # 直接結束，不讓後面炸 JSONDecodeError
+        print(f"抓不到 Bot ID: {e}")
+        return
 
-    # 2. 更新好友快取
+    # 3. 更新好友快取
     try:
         update_friend_cache()
     except Exception as e:
@@ -213,6 +213,5 @@ if __name__ == '__main__':
     bot_thread = threading.Thread(target=run_bot)
     bot_thread.daemon = True
     bot_thread.start()
-    # Render 會用這個 port，不開就會砍掉程序
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
