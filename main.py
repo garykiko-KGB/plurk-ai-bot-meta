@@ -100,11 +100,18 @@ def run_bot():
     print("社畜 Bot 啟動中...")
     
     try:
+        print("準備驗證 Plurk Token")
+
         me = plurk.callAPI('/APP/Users/me')
+
+        print("已取得 me 資料")
+
         global MY_USER_ID
         MY_USER_ID = me['id']
+
         print(f"Plurk Token 認證成功")
         print(f"Bot 使用者 ID: {MY_USER_ID}，Token 有效")
+
     except Exception as e:
         print(f"Plurk Token 認證失敗：{e}")
         return
