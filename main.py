@@ -1,6 +1,8 @@
 import os
 import time
 import re
+import threading
+from flask import Flask
 from plurk_oauth import PlurkAPI
 from google import genai
 from google.genai import types
@@ -26,10 +28,16 @@ except Exception as e:
 
 # 設定區
 KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職']
-FRIEND_ONLY = True  # 關鍵字只回好友
-AUTO_ACCEPT_FRIEND = True  # 自動同意好友邀請
+FRIEND_ONLY = True
+AUTO_ACCEPT_FRIEND = True
 REPLIED_IDS_FILE = 'replied_ids.txt'
-FRIEND_CACHE = set()  # 好友快取，減少 API 次數
+FRIEND_CACHE = set()
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "社畜 Bot 運轉中 (o´ω`o)"
 
 def load_replied_ids():
     try:
@@ -43,7 +51,6 @@ def save_replied_id(plurk_id):
         f.write(f"{plurk_id}\n")
 
 def update_friend_cache():
-    """更新好友清單快取"""
     global FRIEND_CACHE
     try:
         friends = plurk.callAPI('/APP/FriendsFans/getFriendsByOffset', {'user_id': PLURK_MY_USER_ID, 'limit': 100})
@@ -56,20 +63,17 @@ def is_friend(user_id):
     return str(user_id) in FRIEND_CACHE
 
 def auto_accept_friends():
-    """自動同意好友邀請"""
     if not AUTO_ACCEPT_FRIEND:
         return
     try:
-        # 抓待處理的好友邀請
         requests = plurk.callAPI('/APP/Alerts/getActive', {'limit': 20})
         for alert in requests:
             if alert.get('type') == 'friendship_request':
                 from_user_id = alert['from_user']['id']
                 nick = alert['from_user']['display_name']
-                # 同意邀請
                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'friend_id': from_user_id})
                 print(f"已自動加好友：{nick}")
-                FRIEND_CACHE.add(str(from_user_id))  # 立即加入快取
+                FRIEND_CACHE.add(str(from_user_id))
                 time.sleep(1)
     except Exception as e:
         print(f"自動加好友錯誤：{e}")
@@ -118,10 +122,8 @@ def get_my_user_id():
         return None
 
 def check_and_reply():
-    # 1. 自動加好友
     auto_accept_friends()
     
-    # 2. 處理 @ 回覆
     try:
         data = plurk.callAPI('/APP/Alerts/getUnread', {'limit': 20})
         replied_ids = load_replied_ids()
@@ -144,7 +146,6 @@ def check_and_reply():
     except Exception as e:
         print(f"檢查 @ 回覆錯誤：{e}")
 
-    # 3. 海巡關鍵字
     try:
         timeline = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
         replied_ids = load_replied_ids()
@@ -171,25 +172,32 @@ def check_and_reply():
     except Exception as e:
         print(f"關鍵字海巡錯誤：{e}")
 
-if __name__ == '__main__':
-    # 第一次啟動先抓 user_id
+def run_bot():
+    global PLURK_MY_USER_ID
     if not PLURK_MY_USER_ID:
         my_id = get_my_user_id()
         if my_id:
             os.environ['PLURK_MY_USER_ID'] = my_id
+            PLURK_MY_USER_ID = my_id
             print(f"Bot 使用者 ID: {my_id}，請加到 Render 環境變數")
         else:
             print("抓不到 Bot ID，請手動設定 PLURK_MY_USER_ID")
     
-    update_friend_cache()  # 啟動先抓一次好友清單
-    
+    update_friend_cache()
     print(f"社畜 Bot 已啟動")
     print(f"關鍵字：{KEYWORDS}")
-    print(f"好友限定：{FRIEND_ONLY} | 自動加好友：{AUTO_ACCEPT_FRIEND}")
+    print(f"好友限定：{FRIEND_ONLY} ｜ 自動加好友：{AUTO_ACCEPT_FRIEND}")
     
     while True:
         check_and_reply()
         time.sleep(30)
-        # 每10分鐘更新一次好友快取
         if int(time.time()) % 600 < 30:
             update_friend_cache()
+
+if __name__ == '__main__':
+    bot_thread = threading.Thread(target=run_bot)
+    bot_thread.daemon = True
+    bot_thread.start()
+    # Render 會用這個 port，不開就會砍掉程序
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
