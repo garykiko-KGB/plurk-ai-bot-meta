@@ -2,42 +2,54 @@ from flask import Flask, request, redirect
 from plurk_oauth import PlurkAPI
 import os, threading, time, re
 from urllib.parse import parse_qs
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 plurk = PlurkAPI(os.environ.get('PLURK_APP_KEY'), os.environ.get('PLURK_APP_SECRET'))
 
-# --- 初始化 Gemini ---
+# --- 初始化 Gemini，新版 SDK 支援 AQ... Key ---
 GEMINI_CLIENT = None
+GEMINI_STATUS = "未初始化"
+
 if os.environ.get('GEMINI_API_KEY'):
-    genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    GEMINI_CLIENT = genai.GenerativeModel('gemini-1.5-flash')
-    print("Gemini 大腦已連線")
+    try:
+        GEMINI_CLIENT = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+        # 啟動時測試呼叫一次，確認 Key 能用
+        GEMINI_CLIENT.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="test"
+        )
+        GEMINI_STATUS = "Gemini 連線成功"
+        print("Gemini 大腦已連線")
+    except Exception as e:
+        GEMINI_STATUS = f"Gemini 初始化失敗: {e}"
+        print(f"Gemini 初始化失敗: {e}")
 else:
+    GEMINI_STATUS = "沒偵測到 GEMINI_API_KEY"
     print("沒偵測到 GEMINI_API_KEY，將使用預設回覆")
 
 def ai_reply(content):
     """把用戶問題丟給 Gemini，回 20 字內中文"""
     if not GEMINI_CLIENT:
-        return "我聽到囉，但主人還沒幫我裝 AI 大腦 🧠"
-    
+        return f"我大腦裝失敗：{GEMINI_STATUS}"
     try:
-        prompt = f"""你是 AI_Anchor，一個在 Plurk 上的可愛機器人助理。
-使用者對你說：{content}
-規則：
-1. 用繁體中文
-2. 20 字以內
-3. 語氣親切、可愛、有點呆萌
-4. 不要用 markdown"""
-        
-        res = GEMINI_CLIENT.generate_content(prompt)
-        reply = res.text.strip().replace('\n', ' ')
-        # Plurk 回覆上限 140 字，這裡保險砍到 60
+        response = GEMINI_CLIENT.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"你是 AI_Anchor，一個在 Plurk 上的可愛機器人助理。使用者對你說：{content}。規則：1.用繁體中文 2.20字以內 3.語氣親切可愛 4.不要用markdown",
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                max_output_tokens=60
+            )
+        )
+        if not response.text:
+            return "這題我被 Google 消音了，換個話題吧 🤐"
+        reply = response.text.strip().replace('\n', ' ')
         return reply[:60] if reply else "我一時想不到怎麼回耶 🤔"
         
     except Exception as e:
         print(f"Gemini API 錯誤: {e}")
-        return "我大腦短路了，呼叫主人維修 🛠️"
+        return f"大腦短路了：{str(e)[:25]}"
 
 def bot_loop():
     time.sleep(15)
@@ -48,7 +60,7 @@ def bot_loop():
         print("還沒拿到 Token，機器人待命中...")
         return
         
-    print("偵測到 Token，啟動 AI 回話機器人...")
+    print(f"啟動 AI 回話機器人... Gemini狀態: {GEMINI_STATUS}")
     plurk_auth = PlurkAPI(
         os.environ.get('PLURK_APP_KEY'),
         os.environ.get('PLURK_APP_SECRET'),
@@ -90,13 +102,12 @@ def bot_loop():
         except Exception as e:
             print(f"Bot 迴圈錯誤: {e}")
         
-        time.sleep(15) # 15秒掃一次，比較即時
+        time.sleep(15) # 15秒掃一次
 
 # --- Flask 路由 ---
 @app.route('/')
 def home():
-    status = "Gemini 已連線" if GEMINI_CLIENT else "未設定 GEMINI_API_KEY"
-    return f'AI_Anchor AI回話版服役中！<br>狀態：{status}<br><a href="/login">點我重新授權</a>'
+    return f'AI_Anchor AI回話版服役中！<br>Gemini 狀態：{GEMINI_STATUS}<br><a href="/login">點我重新授權</a>'
 
 @app.route('/login')
 def login():
