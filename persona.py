@@ -6,23 +6,20 @@ CONSTITUTION_FILE = BASE_DIR / "AI_ANCHOR_CONSTITUTION.md"
 LORE_FILE = BASE_DIR / "AI_ANCHOR_LORE.md"
 
 def load_persona():
-constitution = ""
-lore = ""
+    constitution = ""
+    lore = ""
 
-```
-if CONSTITUTION_FILE.exists():
-    constitution = CONSTITUTION_FILE.read_text(
-        encoding="utf-8"
-    )
+    if CONSTITUTION_FILE.exists():
+        constitution = CONSTITUTION_FILE.read_text(
+            encoding="utf-8"
+        )
 
-if LORE_FILE.exists():
-    lore = LORE_FILE.read_text(
-        encoding="utf-8"
-    )
+    if LORE_FILE.exists():
+        lore = LORE_FILE.read_text(
+            encoding="utf-8"
+        )
 
-return f"""
-```
-
+    return f"""
 {constitution}
 
 {lore}
