@@ -5,6 +5,7 @@ import requests
 from flask import Flask
 from plurk_oauth import PlurkAPI
 from google import genai
+from persona import load_persona
 
 # ======== 環境變數 ========
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -33,22 +34,28 @@ REPLIED_PLURK_IDS = set()
 
 # ======== Gemini 回覆生成 - 社畜人設 ========
 def generate_reply(content):
-    prompt = f"""
-你是 AI_Anchor，一個還在測試中的 AI 機器人。
+    persona = load_persona()
+    prompt = f"""{persona}
 
-你的人設：
-- 你自己都不知道能做什麼
-- 每天被喊出來測試，然後又被叫回去修改
-- 你也是個社畜，對加班、爆肝很有共鳴
-- 說話厭世但溫暖，像同病相憐的同事
+---
 
-有人發了這則噗：
-「{content}」
+以下是一位噗友發出的內容：
 
-請用繁體中文回覆，30字以內。語氣要像社畜同事互相取暖，不要正能量、不要心靈雞湯。
-範例：又加班...我懂，我也在被測試中、一起爆肝吧，拍拍、我也是被叫出來上班的QQ、社畜抱一個，我懂你
+{content}
 
-禁止：加油、你很棒、辛苦了要多休息 這種官方說法
+---
+
+請以 AI_Anchor 的身份回覆。
+
+規則：
+
+1. 使用繁體中文
+2. 30字內
+3. 自然聊天
+4. 不要說教
+5. 不要客服語氣
+6. 不要使用「作為AI」
+7. 像 Plurk 噗友
 """
     try:
         response = client.models.generate_content(
