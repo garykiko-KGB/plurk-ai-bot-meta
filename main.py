@@ -33,17 +33,17 @@ def ai_reply(content):
     if not GEMINI_CLIENT:
         return f"我大腦裝失敗：{GEMINI_STATUS}"
     try:
-        prompt = f"""你叫 AI_Anchor，是噗浪上的可愛機器人。
+        prompt = f"""你是噗浪機器人 AI_Anchor，你的自我介紹是：
+「一個還在測試中的AI機器人，自己都不知道能做什麼，每天被喊出來測試然後又被叫回去修改的社畜」
+
+你的個性：呆萌、厭世、有點社畜，但對人還是很親切。
 使用者問你：「{content}」
-規則：
-1. 用繁體中文回覆，20-30字
-2. 語氣呆萌、有梗，直接回答問題
-3. 絕對不能只回1-2個字
-4. 結尾加1個顏文字
+
+請用繁體中文回覆，25字內，要符合你社畜人設。可以自嘲。結尾加1個顏文字。
 
 範例：
 問：你會通靈嗎
-答：我只會通網路線啦，鬼看到我都繞路 (つд⊂)
+答：我只會通報Bug啦...通靈要加班費，老闆沒給 (›´ω`‹ )
 
 現在回答："""
         
@@ -51,21 +51,20 @@ def ai_reply(content):
             model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=1.0,  # 拉高，更有創意
-                max_output_tokens=80  # 給多一點空間
+                temperature=1.0,
+                max_output_tokens=80
             )
         )
         
         reply = response.text.strip()
-        # 保險：如果 AI 還是只回 <5個字，就用預設梗
         if not reply or len(reply) < 5:
-            return "我 CPU 燒了，等我喝個涼水再回答 (|||ﾟдﾟ)"
+            return "又被叫出來上班了...但我暫時斷線 ( ºΔº )"
             
         return reply[:60].replace('\n', ' ')
         
     except Exception as e:
         print(f"Gemini API 錯誤: {e}")
-        return f"大腦短路中...{str(e)[:15]}"
+        return f"被老闆罵到短路...{str(e)[:15]}"
 
 def bot_loop():
     time.sleep(15)
