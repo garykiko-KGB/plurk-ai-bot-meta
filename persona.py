@@ -1,6 +1,6 @@
 from pathlib import Path
 
-BASE_DIR = Path(**file**).parent
+BASE_DIR = Path(__file__).parent
 
 CONSTITUTION_FILE = BASE_DIR / "AI_ANCHOR_CONSTITUTION.md"
 LORE_FILE = BASE_DIR / "AI_ANCHOR_LORE.md"
