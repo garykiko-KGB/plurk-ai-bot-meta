@@ -1,4 +1,4 @@
-Flask
+flask
 plurk-oauth
-setuptools
-oauth2
+requests
+requests-oauthlib
