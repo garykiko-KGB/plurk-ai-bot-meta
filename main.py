@@ -1,6 +1,6 @@
-from flask import Flask, request
+from flask import Flask, request, redirect
 from plurk_oauth import PlurkAPI
-import os, threading, time
+import os, threading, time, urllib.parse
 
 app = Flask(__name__)
 plurk = PlurkAPI(os.environ.get('PLURK_APP_KEY'), os.environ.get('PLURK_APP_SECRET'))
@@ -11,26 +11,36 @@ def home():
 
 @app.route('/login')
 def login():
-    request_token = plurk.get_request_token()
-    auth_url = plurk.get_authorization_url(request_token)
-    app.config['REQUEST_TOKEN'] = request_token
-    return f'請用機器人帳號 AI_Anchor 登入，然後點這個連結授權：<br><a href="{auth_url}">{auth_url}</a>'
+    try:
+        request_token = plurk.get_request_token()
+        auth_url = plurk.get_authorization_url(request_token)
+        # 把 token 塞到 callback 網址裡，Render睡著也不怕
+        callback_url = f"https://plurk-ai-bot-meta.onrender.com/callback?oauth_token={request_token['oauth_token']}&oauth_token_secret={request_token['oauth_token_secret']}"
+        plurk.set_request_token(request_token['oauth_token'], request_token['oauth_token_secret'])
+        return redirect(auth_url)
+    except Exception as e:
+        return f'授權失敗：{str(e)}<br>檢查一下 PLURK_APP_KEY 和 SECRET 有沒有設對'
 
 @app.route('/callback')
 def callback():
-    verifier = request.args.get('oauth_verifier')
-    request_token = app.config['REQUEST_TOKEN']
-    plurk.set_request_token(request_token['oauth_token'], request_token['oauth_token_secret'])
-    access_token = plurk.get_access_token(verifier)
-    return f'''
-    授權成功！把這兩行複製到 Render 的 Environment：<br><br>
-    PLURK_OAUTH_TOKEN = {access_token['oauth_token']}<br>
-    PLURK_OAUTH_TOKEN_SECRET = {access_token['oauth_token_secret']}<br><br>
-    複製完就可以關掉這頁了
-    '''
+    try:
+        verifier = request.args.get('oauth_verifier')
+        token = request.args.get('oauth_token')
+        secret = request.args.get('oauth_token_secret')
+        plurk.set_request_token(token, secret)
+        access_token = plurk.get_access_token(verifier)
+        return f'''
+        <h3>授權成功！</h3>
+        把這兩行複製到 Render 的 Environment：<br><br>
+        PLURK_OAUTH_TOKEN = {access_token['oauth_token']}<br>
+        PLURK_OAUTH_TOKEN_SECRET = {access_token['oauth_token_secret']}<br><br>
+        複製完就可以關掉這頁了
+        '''
+    except Exception as e:
+        return f'出錯了：{str(e)}<br>重新點 <a href="/login">/login</a> 試一次'
 
 def bot_loop():
-    time.sleep(10)
+    time.sleep(15) # 等 Render 完全啟動
     if os.environ.get('PLURK_OAUTH_TOKEN'):
         plurk_auth = PlurkAPI(
             os.environ.get('PLURK_APP_KEY'),
@@ -45,12 +55,13 @@ def bot_loop():
                     if alert['type'] == 'mentioned':
                         plurk_auth.callAPI('/APP/Responses/responseAdd', {
                             'plurk_id': alert['plurk_id'],
-                            'content': f"@{alert['from_user']['nick_name']} 你好！我是AI小助手，你剛@我了。功能測試中～",
+                            'content': f"@{alert['from_user']['nick_name']} 你好！我是AI小助手，終於上線啦～",
                             'qualifier': 'says'
                         })
-            except: pass
+            except Exception as e:
+                print(f"Bot error: {e}")
             time.sleep(20)
 
 if __name__ == '__main__':
-    threading.Thread(target=bot_loop).start()
+    threading.Thread(target=bot_loop, daemon=True).start()
     app.run(host='0.0.0.0', port=10000)
