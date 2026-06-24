@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect
 from plurk_oauth import PlurkAPI
-import os, threading, time, urllib.parse
+import os, threading, time
 
 app = Flask(__name__)
 plurk = PlurkAPI(os.environ.get('PLURK_APP_KEY'), os.environ.get('PLURK_APP_SECRET'))
@@ -12,11 +12,11 @@ def home():
 @app.route('/login')
 def login():
     try:
-        request_token = plurk.get_request_token()
+        # 主動把 callback 網址傳給 Plurk，不傳就會炸
+        callback_url = 'https://plurk-ai-bot-meta.onrender.com/callback'
+        request_token = plurk.get_request_token(oauth_callback=callback_url)
         auth_url = plurk.get_authorization_url(request_token)
-        # 把 token 塞到 callback 網址裡，Render睡著也不怕
-        callback_url = f"https://plurk-ai-bot-meta.onrender.com/callback?oauth_token={request_token['oauth_token']}&oauth_token_secret={request_token['oauth_token_secret']}"
-        plurk.set_request_token(request_token['oauth_token'], request_token['oauth_token_secret'])
+        app.config['REQUEST_TOKEN'] = request_token
         return redirect(auth_url)
     except Exception as e:
         return f'授權失敗：{str(e)}<br>檢查一下 PLURK_APP_KEY 和 SECRET 有沒有設對'
@@ -25,9 +25,8 @@ def login():
 def callback():
     try:
         verifier = request.args.get('oauth_verifier')
-        token = request.args.get('oauth_token')
-        secret = request.args.get('oauth_token_secret')
-        plurk.set_request_token(token, secret)
+        request_token = app.config['REQUEST_TOKEN']
+        plurk.set_request_token(request_token['oauth_token'], request_token['oauth_token_secret'])
         access_token = plurk.get_access_token(verifier)
         return f'''
         <h3>授權成功！</h3>
@@ -40,7 +39,7 @@ def callback():
         return f'出錯了：{str(e)}<br>重新點 <a href="/login">/login</a> 試一次'
 
 def bot_loop():
-    time.sleep(15) # 等 Render 完全啟動
+    time.sleep(15)
     if os.environ.get('PLURK_OAUTH_TOKEN'):
         plurk_auth = PlurkAPI(
             os.environ.get('PLURK_APP_KEY'),
