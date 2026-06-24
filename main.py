@@ -30,22 +30,25 @@ else:
     print("沒偵測到 GEMINI_API_KEY，將使用預設回覆")
 
 def ai_reply(content):
-    """把用戶問題丟給 Gemini，回 20 字內中文"""
     if not GEMINI_CLIENT:
         return f"我大腦裝失敗：{GEMINI_STATUS}"
     try:
+        prompt = f"""你是 Plurk 機器人 AI_Anchor，個性呆萌親切。
+有人問你：「{content}」
+請用繁體中文回覆，30字內，不要講廢話，直接回答問題。可以加1個顏文字。"""
+        
         response = GEMINI_CLIENT.models.generate_content(
             model="gemini-2.5-flash",
-            contents=f"你是 AI_Anchor，一個在 Plurk 上的可愛機器人助理。使用者對你說：{content}。規則：1.用繁體中文 2.20字以內 3.語氣親切可愛 4.不要用markdown",
+            contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.7,
+                temperature=0.9,  # 調高一點比較活潑
                 max_output_tokens=60
             )
         )
         if not response.text:
-            return "這題我被 Google 消音了，換個話題吧 🤐"
+            return "我被 Google 靜音了，換個問題考我 (｡ŏ_ŏ)"
         reply = response.text.strip().replace('\n', ' ')
-        return reply[:60] if reply else "我一時想不到怎麼回耶 🤔"
+        return reply[:60] if reply else "腦袋當機...重問一次看看 🤔"
         
     except Exception as e:
         print(f"Gemini API 錯誤: {e}")
