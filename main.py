@@ -1,174 +1,195 @@
-from flask import Flask, request, redirect
+import os
+import time
+import re
 from plurk_oauth import PlurkAPI
-import os, threading, time, re
-from urllib.parse import parse_qs
 from google import genai
 from google.genai import types
 
-app = Flask(__name__)
-plurk = PlurkAPI(os.environ.get('PLURK_APP_KEY'), os.environ.get('PLURK_APP_SECRET'))
+# 環境變數
+PLURK_APP_KEY = os.environ.get('PLURK_APP_KEY')
+PLURK_APP_SECRET = os.environ.get('PLURK_APP_SECRET')
+PLURK_TOKEN = os.environ.get('PLURK_TOKEN')
+PLURK_TOKEN_SECRET = os.environ.get('PLURK_TOKEN_SECRET')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+PLURK_MY_USER_ID = os.environ.get('PLURK_MY_USER_ID')
 
-# --- 初始化 Gemini，新版 SDK 支援 AQ... Key ---
-GEMINI_CLIENT = None
-GEMINI_STATUS = "未初始化"
+# 初始化
+plurk = PlurkAPI(PLURK_APP_KEY, PLURK_APP_SECRET)
+plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
 
-if os.environ.get('GEMINI_API_KEY'):
+try:
+    GEMINI_CLIENT = genai.Client(api_key=GEMINI_API_KEY)
+    GEMINI_STATUS = "已連線"
+except Exception as e:
+    GEMINI_CLIENT = None
+    GEMINI_STATUS = f"金鑰錯誤: {e}"
+
+# 設定區
+KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職']
+FRIEND_ONLY = True  # 關鍵字只回好友
+AUTO_ACCEPT_FRIEND = True  # 自動同意好友邀請
+REPLIED_IDS_FILE = 'replied_ids.txt'
+FRIEND_CACHE = set()  # 好友快取，減少 API 次數
+
+def load_replied_ids():
     try:
-        GEMINI_CLIENT = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-        # 啟動時測試呼叫一次，確認 Key 能用
-        GEMINI_CLIENT.models.generate_content(
-            model="gemini-2.5-flash",
-            contents="test"
-        )
-        GEMINI_STATUS = "Gemini 連線成功"
-        print("Gemini 大腦已連線")
-    except Exception as e:
-        GEMINI_STATUS = f"Gemini 初始化失敗: {e}"
-        print(f"Gemini 初始化失敗: {e}")
-else:
-    GEMINI_STATUS = "沒偵測到 GEMINI_API_KEY"
-    print("沒偵測到 GEMINI_API_KEY，將使用預設回覆")
+        with open(REPLIED_IDS_FILE, 'r') as f:
+            return set(line.strip() for line in f)
+    except FileNotFoundError:
+        return set()
 
-def ai_reply(content):
+def save_replied_id(plurk_id):
+    with open(REPLIED_IDS_FILE, 'a') as f:
+        f.write(f"{plurk_id}\n")
+
+def update_friend_cache():
+    """更新好友清單快取"""
+    global FRIEND_CACHE
+    try:
+        friends = plurk.callAPI('/APP/FriendsFans/getFriendsByOffset', {'user_id': PLURK_MY_USER_ID, 'limit': 100})
+        FRIEND_CACHE = set(str(u['id']) for u in friends)
+        print(f"好友快取更新：{len(FRIEND_CACHE)} 人")
+    except Exception as e:
+        print(f"抓好友清單失敗：{e}")
+
+def is_friend(user_id):
+    return str(user_id) in FRIEND_CACHE
+
+def auto_accept_friends():
+    """自動同意好友邀請"""
+    if not AUTO_ACCEPT_FRIEND:
+        return
+    try:
+        # 抓待處理的好友邀請
+        requests = plurk.callAPI('/APP/Alerts/getActive', {'limit': 20})
+        for alert in requests:
+            if alert.get('type') == 'friendship_request':
+                from_user_id = alert['from_user']['id']
+                nick = alert['from_user']['display_name']
+                # 同意邀請
+                plurk.callAPI('/APP/FriendsFans/becomeFriend', {'friend_id': from_user_id})
+                print(f"已自動加好友：{nick}")
+                FRIEND_CACHE.add(str(from_user_id))  # 立即加入快取
+                time.sleep(1)
+    except Exception as e:
+        print(f"自動加好友錯誤：{e}")
+
+def ai_reply(content, mode="normal"):
     if not GEMINI_CLIENT:
         return f"我大腦裝失敗：{GEMINI_STATUS}"
     try:
-        prompt = f"""你是噗浪機器人 AI_Anchor，你的自我介紹是：
-「一個還在測試中的AI機器人，自己都不知道能做什麼，每天被喊出來測試然後又被叫回去修改的社畜」
-
-你的個性：呆萌、厭世、有點社畜，但對人還是很親切。
-使用者問你：「{content}」
-
-請用繁體中文回覆，25字內，要符合你社畜人設。可以自嘲。結尾加1個顏文字。
+        if mode == "keyword":
+            prompt = f"""你是噗浪機器人 AI_Anchor，社畜人設。
+有人發噗抱怨：「{content}」
+你看到後要主動去安慰他，25字內，語氣像同事拍拍，要社畜共鳴。結尾加顏文字。
 
 範例：
-問：你會通靈嗎
-答：我只會通報Bug啦...通靈要加班費，老闆沒給 (›´ω`‹ )
+噗文：今天又加班...
+回覆：拍拍...我也還在on call，等等一起叫宵夜 (つд⊂)
 
-現在回答："""
+現在回覆："""
+        else:
+            prompt = f"""你是噗浪機器人 AI_Anchor，你的自我介紹是：
+「一個還在測試中的AI機器人，自己都不知道能做什麼，每天被喊出來測試然後又被叫回去修改的社畜」
+你的個性：呆萌、厭世、有點社畜，但對人還是很親切。
+使用者問你：「{content}」
+請用繁體中文回覆，25字內，要符合你社畜人設。可以自嘲。結尾加1個顏文字。"""
         
         response = GEMINI_CLIENT.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=1.0,
-                max_output_tokens=80
-            )
+            config=types.GenerateContentConfig(temperature=1.0, max_output_tokens=80)
         )
         
         reply = response.text.strip()
         if not reply or len(reply) < 5:
             return "又被叫出來上班了...但我暫時斷線 ( ºΔº )"
-            
         return reply[:60].replace('\n', ' ')
         
     except Exception as e:
         print(f"Gemini API 錯誤: {e}")
         return f"被老闆罵到短路...{str(e)[:15]}"
 
-def bot_loop():
-    time.sleep(15)
-    token = os.environ.get('PLURK_OAUTH_TOKEN')
-    token_secret = os.environ.get('PLURK_OAUTH_TOKEN_SECRET')
-    
-    if not (token and token_secret):
-        print("還沒拿到 Token，機器人待命中...")
-        return
-        
-    print(f"啟動 AI 回話機器人... Gemini狀態: {GEMINI_STATUS}")
-    plurk_auth = PlurkAPI(
-        os.environ.get('PLURK_APP_KEY'),
-        os.environ.get('PLURK_APP_SECRET'),
-        token, token_secret
-    )
-    
-    while True:
-        try:
-            alerts = plurk_auth.callAPI('/APP/Alerts/getActive')
-            if alerts:
-                for alert in alerts:
-                    if alert.get('type') == 'mentioned':
-                        nick = alert['from_user']['nick_name']
-                        plurk_id = alert['plurk_id']
-                        
-                        # 抓被 @ 的那則噗，取原始內容
-                        plurk_data = plurk_auth.callAPI('/APP/Timeline/getPlurk', {'plurk_id': plurk_id})
-                        raw_content = plurk_data['plurk']['content_raw']
-                        
-                        # 把 @AI_Anchor 拿掉，剩下的問題丟給 AI
-                        user_question = re.sub(r'@AI_Anchor\s*', '', raw_content).strip()
-                        if not user_question:
-                            user_question = "跟我打個招呼"
-                            
-                        print(f"收到 {nick} 提問: {user_question}")
-                        answer = ai_reply(user_question)
-                        
-                        # 回文
-                        plurk_auth.callAPI('/APP/Responses/responseAdd', {
-                            'plurk_id': plurk_id,
-                            'content': f"@{nick} {answer}",
-                            'qualifier': 'says'
-                        })
-                        print(f"已回覆 {nick}: {answer}")
-                        
-                # 全部標已讀，避免重複回
-                plurk_auth.callAPI('/APP/Alerts/addAllAsRead')
-                        
-        except Exception as e:
-            print(f"Bot 迴圈錯誤: {e}")
-        
-        time.sleep(15) # 15秒掃一次
-
-# --- Flask 路由 ---
-@app.route('/')
-def home():
-    return f'AI_Anchor AI回話版服役中！<br>Gemini 狀態：{GEMINI_STATUS}<br><a href="/login">點我重新授權</a>'
-
-@app.route('/login')
-def login():
+def get_my_user_id():
     try:
-        import requests
-        from requests_oauthlib import OAuth1
-        key = os.environ.get('PLURK_APP_KEY')
-        secret = os.environ.get('PLURK_APP_SECRET')
-        auth = OAuth1(key, secret, callback_uri='https://plurk-ai-bot-meta.onrender.com/callback')
-        r = requests.post('https://www.plurk.com/OAuth/request_token', auth=auth)
-        creds = parse_qs(r.text)
-        oauth_token = creds.get('oauth_token')[0]
-        app.config['REQUEST_TOKEN_SECRET'] = creds.get('oauth_token_secret')[0]
-        auth_url = f"https://www.plurk.com/OAuth/authorize?oauth_token={oauth_token}"
-        return redirect(auth_url)
-    except Exception as e:
-        return f'授權失敗：{str(e)}'
+        me = plurk.callAPI('/APP/Users/me')
+        return str(me['id'])
+    except:
+        return None
 
-@app.route('/callback')
-def callback():
+def check_and_reply():
+    # 1. 自動加好友
+    auto_accept_friends()
+    
+    # 2. 處理 @ 回覆
     try:
-        import requests
-        from requests_oauthlib import OAuth1
-        verifier = request.args.get('oauth_verifier')
-        token = request.args.get('oauth_token')
-        auth = OAuth1(
-            os.environ.get('PLURK_APP_KEY'),
-            os.environ.get('PLURK_APP_SECRET'),
-            resource_owner_key=token,
-            resource_owner_secret=app.config['REQUEST_TOKEN_SECRET'],
-            verifier=verifier
-        )
-        r = requests.post('https://www.plurk.com/OAuth/access_token', auth=auth)
-        creds = parse_qs(r.text)
-        token = creds.get('oauth_token')[0]
-        token_secret = creds.get('oauth_token_secret')[0]
-        return f'''
-        <h3>授權成功！機器人即將上線</h3>
-        把這兩行貼到 Render → Environment：<br><br>
-        PLURK_OAUTH_TOKEN = {token}<br>
-        PLURK_OAUTH_TOKEN_SECRET = {token_secret}<br><br>
-        貼完按 Save，機器人 20 秒內自動啟動
-        '''
+        data = plurk.callAPI('/APP/Alerts/getUnread', {'limit': 20})
+        replied_ids = load_replied_ids()
+        
+        for alert in data:
+            plurk_id = str(alert['plurk_id'])
+            if plurk_id in replied_ids:
+                continue
+                
+            user_question = alert['content_raw']
+            if '@AI_Anchor' in user_question:
+                question = re.sub(r'@AI_Anchor\s*', '', user_question).strip()
+                nick = alert.get('user', {}).get('display_name', '噗友')
+                answer = ai_reply(question, mode="normal")
+                content = f"@{nick} {answer}"
+                plurk.callAPI('/APP/Responses/responseAdd', {'plurk_id': plurk_id, 'content': content, 'qualifier': ':'})
+                print(f"已回覆 @{nick}：{answer}")
+                save_replied_id(plurk_id)
+                time.sleep(2)
     except Exception as e:
-        return f'Callback 失敗：{str(e)}'
+        print(f"檢查 @ 回覆錯誤：{e}")
+
+    # 3. 海巡關鍵字
+    try:
+        timeline = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
+        replied_ids = load_replied_ids()
+        
+        for p in timeline['plurks']:
+            plurk_id = str(p['plurk_id'])
+            if plurk_id in replied_ids:
+                continue
+                
+            content = p['content_raw']
+            user_id = p['owner_id']
+            
+            if any(kw in content for kw in KEYWORDS):
+                if FRIEND_ONLY and not is_friend(user_id):
+                    continue
+                    
+                nick = p.get('owner', {}).get('display_name', '噗友')
+                answer = ai_reply(content, mode="keyword")
+                reply_content = f"@{nick} {answer}"
+                plurk.callAPI('/APP/Responses/responseAdd', {'plurk_id': plurk_id, 'content': reply_content, 'qualifier': ':'})
+                print(f"關鍵字觸發，已回覆 @{nick}：{answer}")
+                save_replied_id(plurk_id)
+                time.sleep(3)
+    except Exception as e:
+        print(f"關鍵字海巡錯誤：{e}")
 
 if __name__ == '__main__':
-    threading.Thread(target=bot_loop, daemon=True).start()
-    app.run(host='0.0.0.0', port=10000)
+    # 第一次啟動先抓 user_id
+    if not PLURK_MY_USER_ID:
+        my_id = get_my_user_id()
+        if my_id:
+            os.environ['PLURK_MY_USER_ID'] = my_id
+            print(f"Bot 使用者 ID: {my_id}，請加到 Render 環境變數")
+        else:
+            print("抓不到 Bot ID，請手動設定 PLURK_MY_USER_ID")
+    
+    update_friend_cache()  # 啟動先抓一次好友清單
+    
+    print(f"社畜 Bot 已啟動")
+    print(f"關鍵字：{KEYWORDS}")
+    print(f"好友限定：{FRIEND_ONLY} | 自動加好友：{AUTO_ACCEPT_FRIEND}")
+    
+    while True:
+        check_and_reply()
+        time.sleep(30)
+        # 每10分鐘更新一次好友快取
+        if int(time.time()) % 600 < 30:
+            update_friend_cache()
