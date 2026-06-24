@@ -17,13 +17,25 @@ def home():
 @app.route('/login')
 def login():
     try:
-        # plurk-oauth 套件不吃 oauth_callback 參數，靠 Plurk 後台的設定
-        request_token = plurk.get_request_token()
-        auth_url = plurk.get_authorization_url(request_token)
-        app.config['REQUEST_TOKEN'] = request_token
-        return redirect(auth_url)
+        import requests
+        from requests_oauthlib import OAuth1
+        
+        key = os.environ.get('PLURK_APP_KEY')
+        secret = os.environ.get('PLURK_APP_SECRET')
+        
+        # 手動發一次 request，看 Plurk 到底回什麼
+        auth = OAuth1(key, secret, callback_uri='https://plurk-ai-bot-meta.onrender.com/callback')
+        r = requests.post('https://www.plurk.com/OAuth/request_token', auth=auth)
+        
+        # 直接把 Plurk 回應印出來
+        return f'''
+        HTTP 狀態碼: {r.status_code}<br>
+        Plurk 原始回應: <pre>{r.text}</pre><br><br>
+        你用的 KEY: {key}<br>
+        你用的 SECRET: {secret[:5]}...{secret[-5:]}
+        '''
     except Exception as e:
-        return f'授權失敗：{str(e)}<br>檢查一下 PLURK_APP_KEY 和 SECRET 有沒有設對'
+        return f'程式錯誤：{str(e)}'
 
 @app.route('/callback')
 def callback():
