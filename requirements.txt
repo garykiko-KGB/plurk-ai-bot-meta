@@ -3,5 +3,5 @@ plurk-oauth
 requests
 requests-oauthlib
 openai
-google-generativeai
+google-genai
 apscheduler
