@@ -1,2 +1,4 @@
 Flask
 plurk-oauth
+setuptools
+oauth2
