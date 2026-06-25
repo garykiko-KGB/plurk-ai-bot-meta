@@ -16,8 +16,9 @@ def get_fixtures():
         f"{BASE_URL}/fixtures",
         headers=headers,
         params={
-            "league": WORLD_CUP_ID,
-            "season": 2022
+            "date": "2026-06-24"
+#            "league": WORLD_CUP_ID,
+#            "season": 2022
         }
     )
 
