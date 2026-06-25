@@ -17,13 +17,17 @@ def get_fixtures():
         headers=headers,
         params={
             "league": WORLD_CUP_ID,
-            "season": 2026
+            "season": 2022
         }
     )
 
     print("HTTP:", response.status_code)
 
     data = response.json()
+    
+    if data.get("errors"):
+        print("API 錯誤：", data["errors"])
+        return
 
     print("===== 完整 JSON =====")
     print(data)
