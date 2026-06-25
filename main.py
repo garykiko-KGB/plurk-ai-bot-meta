@@ -72,6 +72,9 @@ def update_friend_cache():
     global FRIEND_IDS
     try:
         friends = plurk.callAPI('/APP/FriendsFans/getFriendsByOffset', {'user_id': MY_USER_ID, 'limit': 1000})
+        print(type(friends))
+        print(friends)
+        
         FRIEND_IDS = set([user['id'] for user in friends])
         print(f"好友快取更新：{len(FRIEND_IDS)} 人")
     except Exception as e:
@@ -153,6 +156,8 @@ def run_bot():
             check_friend_requests()
 
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
+            print(type(plurks))
+            print(plurks)
             
             for p in plurks:
                 plurk_id = p['plurk_id']
