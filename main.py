@@ -114,11 +114,11 @@ def run_bot():
 
         log("開始呼叫 Users/me")
 
-        log("開始 Users/me", time.time())
+        log(f"開始 Users/me {time.time()}")
 
         me = plurk.callAPI('/APP/Users/me')
 
-        log("結束 Users/me", time.time())
+        log(f"結束 Users/me {time.time()}")
 
         log("Users/me 呼叫完成")
 
@@ -207,7 +207,7 @@ def run_bot():
         except Exception as e:
             import traceback
             traceback.print_exc()
-            print(f"主迴圈錯誤：{e}")
+            log(f"主迴圈錯誤：{e}")
             time.sleep(60)
 
 # ======== Flask 保活 ========
