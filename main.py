@@ -13,7 +13,8 @@ from core.config import (
     AUTO_ADD_FRIEND,
     FRIEND_CACHE_UPDATE_INTERVAL,
 )
-from modules.fifa import get_worldcup_id
+from modules.fifa import get_fixtures
+# from modules.fifa import get_worldcup_id
 
 # ======== 環境變數 ========
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -149,7 +150,7 @@ def run_bot():
     last_friend_update = time.time()
     
     log("社畜 Bot 已啟動")
-    get_worldcup_id()
+#    get_worldcup_id()
     log(f"關鍵字：{KEYWORDS}")
     log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
