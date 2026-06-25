@@ -30,7 +30,7 @@ plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
 
 MY_USER_ID = int(PLURK_MY_USER_ID) if PLURK_MY_USER_ID else None
 FRIEND_IDS = set()
-REPLIED_PLURK_IDS = set()
+# REPLIED_PLURK_IDS = set()
 
 # ======== Gemini 回覆生成 - 社畜人設 ========
 def generate_reply(content):
@@ -157,8 +157,16 @@ def run_bot():
                 user_id = p['owner_id']
                 content = p.get('content_raw', '')
 
-                if user_id == MY_USER_ID or plurk_id in REPLIED_PLURK_IDS:
+                if user_id == MY_USER_ID: 
+                    # or plurk_id in REPLIED_PLURK_IDS
                     continue
+
+                response = plurk.callAPI(
+                    "/APP/Responses/get",
+                    {"plurk_id": plurk_id}
+                )
+
+                print(response)
 
                 if REPLY_ONLY_TO_FRIENDS and user_id not in FRIEND_IDS:
                     continue
@@ -172,7 +180,7 @@ def run_bot():
                             'qualifier': ':'
                         })
                         print(f"已回覆 {plurk_id}：{reply_text}")
-                        REPLIED_PLURK_IDS.add(plurk_id)
+                        # REPLIED_PLURK_IDS.add(plurk_id)
                         time.sleep(3)
                     except Exception as e:
                         print(f"回覆失敗 {plurk_id}：{e}")
