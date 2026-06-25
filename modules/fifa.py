@@ -11,16 +11,22 @@ def get_fixtures():
     headers = {
         "x-apisports-key": API_KEY
     }
+    print("===== params =====")
+    params = {
+        "date": "2026-06-24",
+        "league": WORLD_CUP_ID,
+        "season": 2026
+    }
+    print(params)
 
     response = requests.get(
         f"{BASE_URL}/fixtures",
         headers=headers,
-        params={
-            "date": "2026-06-24"
-#            "league": WORLD_CUP_ID,
-#            "season": 2022
-        }
+        params=params
     )
+
+    print("===== URL =====")
+    print(response.url)
 
     print("HTTP:", response.status_code)
 
