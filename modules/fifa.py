@@ -5,23 +5,25 @@ API_KEY = os.getenv("FOOTBALL_API_KEY")
 
 BASE_URL = "https://v3.football.api-sports.io"
 
-def get_worldcup_id():
+WORLD_CUP_ID = 1
 
-    headers = {
-        "x-apisports-key": API_KEY
-    }
+# def get_worldcup_id():
 
-    response = requests.get(
-        f"{BASE_URL}/leagues?search=World Cup",
-        headers=headers
-    )
+#    headers = {
+#        "x-apisports-key": API_KEY
+#    }
 
-    print("HTTP:", response.status_code)
+#    response = requests.get(
+#        f"{BASE_URL}/leagues?search=World Cup",
+#        headers=headers
+#    )
+
+#    print("HTTP:", response.status_code)
     
-    data = response.json()
+#    data = response.json()
 
-    for league in data["response"]:
-        print(
-            league["league"]["id"],
-            league["league"]["name"]
-        )
+#    for league in data["response"]:
+#        print(
+#            league["league"]["id"],
+#            league["league"]["name"]
+#        )
