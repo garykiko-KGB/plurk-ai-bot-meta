@@ -150,6 +150,7 @@ def run_bot():
     last_friend_update = time.time()
     
     log("社畜 Bot 已啟動")
+    get_fixtures()
 #    get_worldcup_id()
     log(f"關鍵字：{KEYWORDS}")
     log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
