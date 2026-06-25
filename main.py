@@ -5,7 +5,7 @@ import requests
 from flask import Flask
 from plurk_oauth import PlurkAPI
 from google import genai
-from persona import load_persona
+from ai.persona import load_persona
 
 # ======== 環境變數 ========
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
