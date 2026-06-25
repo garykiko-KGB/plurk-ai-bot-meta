@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import requests
+from core.logger import log
 from flask import Flask
 from plurk_oauth import PlurkAPI
 from google import genai
@@ -82,9 +83,9 @@ def update_friend_cache():
         print(friends)
         
         FRIEND_IDS = set([user['id'] for user in friends])
-        print(f"好友快取更新：{len(FRIEND_IDS)} 人")
+        log(f"好友快取更新：{len(FRIEND_IDS)} 人")
     except Exception as e:
-        print(f"更新好友列表失敗：{e}")
+        log(f"更新好友列表失敗：{e}")
 
 # ======== 自動加好友 ========
 def check_friend_requests():
@@ -97,54 +98,54 @@ def check_friend_requests():
             user_name = req.get('nick_name', '某人')
             try:
                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
-                print(f"已自動加好友：{user_name}")
+                log(f"已自動加好友：{user_name}")
                 FRIEND_IDS.add(user_id)
             except Exception as e:
-                print(f"加好友失敗 {user_name}：{e}")
+                log(f"加好友失敗 {user_name}：{e}")
     except Exception as e:
-        print(f"檢查好友邀請失敗：{e}")
+        log(f"檢查好友邀請失敗：{e}")
 
 # ======== 主迴圈 ========
 def run_bot():
-    print("社畜 Bot 啟動中...")
+    log("社畜 Bot 啟動中...")
     
     try:
-        print("準備驗證 Plurk Token")
+        log("準備驗證 Plurk Token")
 
-        print("開始呼叫 Users/me")
+        log("開始呼叫 Users/me")
 
-        print("開始 Users/me", time.time())
+        log("開始 Users/me", time.time())
 
         me = plurk.callAPI('/APP/Users/me')
 
-        print("結束 Users/me", time.time())
+        log("結束 Users/me", time.time())
 
-        print("Users/me 呼叫完成")
+        log("Users/me 呼叫完成")
 
         print(me)
 
-        print("已取得 me 資料")
+        log("已取得 me 資料")
 
         global MY_USER_ID
         MY_USER_ID = me['id']
 
-        print(f"Plurk Token 認證成功")
-        print(f"Bot 使用者 ID: {MY_USER_ID}，Token 有效")
-        print("===== 即將進入 while =====", flush=True)
+        log(f"Plurk Token 認證成功")
+        log(f"Bot 使用者 ID: {MY_USER_ID}，Token 有效")
+        log("===== 即將進入 while =====")
 
     except Exception as e:
-        print(f"Plurk Token 認證失敗：{e}")
+        log(f"Plurk Token 認證失敗：{e}")
         return
 
     update_friend_cache()
     last_friend_update = time.time()
     
-    print("社畜 Bot 已啟動")
-    print(f"關鍵字：{KEYWORDS}")
-    print(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
+    log("社畜 Bot 已啟動")
+    log(f"關鍵字：{KEYWORDS}")
+    log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
     while True:
-        print("===== while 開始 =====", flush=True)
+        log("===== while 開始 =====")
         try:
             if time.time() - last_friend_update > FRIEND_CACHE_UPDATE_INTERVAL:
                 update_friend_cache()
@@ -156,7 +157,7 @@ def run_bot():
 
             # 取出真正的噗文列表
             plurks = plurks['plurks']
-            print(f"本次取得 {len(plurks)} 則噗文")
+            log(f"本次取得 {len(plurks)} 則噗文")
             
             for p in plurks:
                 plurk_id = p['plurk_id']
@@ -177,7 +178,7 @@ def run_bot():
                     r["user_id"] == MY_USER_ID
                     for r in responses
                 )
-                print(f"噗 {plurk_id}：共有 {len(responses)} 則回應，已回覆={already_replied}")
+                log(f"噗 {plurk_id}：共有 {len(responses)} 則回應，已回覆={already_replied}")
                 if already_replied:
                     continue
                     
@@ -194,13 +195,13 @@ def run_bot():
                             'content': reply_text,
                             'qualifier': ':'
                         })
-                        print(f"已回覆 {plurk_id}：{reply_text}")
+                        log(f"已回覆 {plurk_id}：{reply_text}")
                         # REPLIED_PLURK_IDS.add(plurk_id)
                         time.sleep(3)
                     except Exception as e:
-                        print(f"回覆失敗 {plurk_id}：{e}")
+                        log(f"回覆失敗 {plurk_id}：{e}")
 
-            print("===== while 結束 =====", flush=True)
+            log("===== while 結束 =====")
             time.sleep(30)
 
         except Exception as e:
