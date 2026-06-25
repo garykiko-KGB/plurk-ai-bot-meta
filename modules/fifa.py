@@ -25,12 +25,39 @@ def get_fixtures():
 
     data = response.json()
 
+    print("===== 完整 JSON =====")
+    print(data)
+    print("====================")
+
+    print("response 數量：", len(data["response"]))
+
+    if len(data["response"]) == 0:
+        print("沒有任何比賽資料")
+        return
+
+    print("===== 比賽列表 =====")
+
     for match in data["response"]:
         home = match["teams"]["home"]["name"]
         away = match["teams"]["away"]["name"]
         date = match["fixture"]["date"]
+        status = match["fixture"]["status"]["short"]
 
-        print(date, home, "vs", away)
+        home_score = match["goals"]["home"]
+        away_score = match["goals"]["away"]
+
+        print(
+            f"{date} | {status} | "
+            f"{home} {home_score}-{away_score} {away}"
+        )
+
+
+#    for match in data["response"]:
+#        home = match["teams"]["home"]["name"]
+#        away = match["teams"]["away"]["name"]
+#        date = match["fixture"]["date"]
+#
+#        print(date, home, "vs", away)
 
 # def get_worldcup_id():
 #    headers = {
