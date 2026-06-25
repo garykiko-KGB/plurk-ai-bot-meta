@@ -166,7 +166,16 @@ def run_bot():
                     {"plurk_id": plurk_id}
                 )
 
-                print(response)
+                responses = response.get("responses", [])
+                already_replied = any(
+                    r["user_id"] == MY_USER_ID
+                    for r in responses
+                )
+                print(f"噗 {plurk_id}：共有 {len(responses)} 則回應，已回覆={already_replied}")
+                if already_replied:
+                    continue
+                    
+                # print(response)
 
                 if REPLY_ONLY_TO_FRIENDS and user_id not in FRIEND_IDS:
                     continue
