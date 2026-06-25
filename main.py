@@ -93,6 +93,11 @@ def check_friend_requests():
         return
     try:
         requests_data = plurk.callAPI('/APP/FriendsFans/getFriendRequests')
+        
+        log(f"type = {type(requests_data)}")
+        log(f"repr = {repr(requests_data)}")
+        log(f"value = {requests_data}")
+        
         for req in requests_data:
             user_id = req['id']
             user_name = req.get('nick_name', '某人')
@@ -103,6 +108,8 @@ def check_friend_requests():
             except Exception as e:
                 log(f"加好友失敗 {user_name}：{e}")
     except Exception as e:
+        log(f"Exception Type: {type(e).__name__}")
+        log(f"Exception Detail: {repr(e)}")
         log(f"檢查好友邀請失敗：{e}")
 
 # ======== 主迴圈 ========
