@@ -6,6 +6,12 @@ from flask import Flask
 from plurk_oauth import PlurkAPI
 from google import genai
 from ai.persona import load_persona
+from core.config import (
+    KEYWORDS,
+    REPLY_ONLY_TO_FRIENDS,
+    AUTO_ADD_FRIEND,
+    FRIEND_CACHE_UPDATE_INTERVAL,
+)
 
 # ======== 環境變數 ========
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -16,10 +22,10 @@ PLURK_TOKEN_SECRET = os.environ.get("PLURK_TOKEN_SECRET")
 PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
 # ======== 設定區 ========
-KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職', '不想上班']
-REPLY_ONLY_TO_FRIENDS = True
-AUTO_ADD_FRIEND = True
-FRIEND_CACHE_UPDATE_INTERVAL = 600
+# KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職', '不想上班']
+# REPLY_ONLY_TO_FRIENDS = True
+# AUTO_ADD_FRIEND = True
+# FRIEND_CACHE_UPDATE_INTERVAL = 600
 
 # ======== 初始化 ========
 app = Flask(__name__)
