@@ -107,7 +107,11 @@ def run_bot():
 
         print("開始呼叫 Users/me")
 
+        print("開始 Users/me", time.time())
+
         me = plurk.callAPI('/APP/Users/me')
+
+        print("結束 Users/me", time.time())
 
         print("Users/me 呼叫完成")
 
@@ -120,6 +124,7 @@ def run_bot():
 
         print(f"Plurk Token 認證成功")
         print(f"Bot 使用者 ID: {MY_USER_ID}，Token 有效")
+        print("===== 即將進入 while =====", flush=True)
 
     except Exception as e:
         print(f"Plurk Token 認證失敗：{e}")
@@ -133,6 +138,7 @@ def run_bot():
     print(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
     while True:
+        print("===== while 開始 =====", flush=True)
         try:
             if time.time() - last_friend_update > FRIEND_CACHE_UPDATE_INTERVAL:
                 update_friend_cache()
@@ -171,9 +177,12 @@ def run_bot():
                     except Exception as e:
                         print(f"回覆失敗 {plurk_id}：{e}")
 
+            print("===== while 結束 =====", flush=True)
             time.sleep(30)
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"主迴圈錯誤：{e}")
             time.sleep(60)
 
