@@ -100,21 +100,6 @@ def check_friend_requests():
 
 # ======== 主迴圈 ========
 def run_bot():
-    print("測試 requests")
-
-    try:
-        r = requests.get(
-            "https://www.plurk.com/APP/Users/me",
-            timeout=10
-        )
-
-        print("requests 完成")
-        print(f"HTTP: {r.status_code}")
-        print(r.text[:300])
-
-    except Exception as e:
-        print(f"requests 失敗: {e}")
-        
     print("社畜 Bot 啟動中...")
     
     try:
@@ -156,8 +141,10 @@ def run_bot():
             check_friend_requests()
 
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
-            print(type(plurks))
-            print(plurks)
+
+            # 取出真正的噗文列表
+            plurks = plurks['plurks']
+            print(f"本次取得 {len(plurks)} 則噗文")
             
             for p in plurks:
                 plurk_id = p['plurk_id']
