@@ -17,18 +17,11 @@ def get_worldcup_id():
     )
 
     print("HTTP:", response.status_code)
-    print(response.json())
+    
+    data = response.json()
 
-# def test():
-#    headers = {
-#        "x-apisports-key": API_KEY
-#    }
-#
-#    url = f"{BASE_URL}/status"
-#
-#    response = requests.get(url, headers=headers)
-#
-#    print("HTTP:", response.status_code)
-#    print(response.text)
-#
-#    return response.status_code
+    for league in data["response"]:
+        print(
+            league["league"]["id"],
+            league["league"]["name"]
+        )
