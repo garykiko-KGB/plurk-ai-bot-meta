@@ -162,13 +162,13 @@ def run_bot():
         report = format_today(today)
 
         if report:
-        log("=== 今日 FIFA 戰報 ===")
-        log("\n" + report)
-    else:
-        log("今天沒有已完成比賽")
+            log("=== 今日 FIFA 戰報 ===")
+            log("\n" + report)
+        else:
+            log("今天沒有已完成比賽")
 
-except Exception as e:
-    log(f"FIFA Error: {e}")
+    except Exception as e:
+        log(f"FIFA Error: {e}")
     
 #    get_fixtures()
 #    get_worldcup_id()
