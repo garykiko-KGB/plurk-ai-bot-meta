@@ -32,7 +32,9 @@ def publish(content):
         }
     )
 
-    print(result)
+    print("callAPI 已回傳")
+    print(type(result))
+    print(repr(result))
 
     return result
 
