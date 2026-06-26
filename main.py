@@ -4,7 +4,7 @@ import threading
 import requests
 from core.logger import log
 from flask import Flask
-from platform.plurk import plurk
+from services.plurk import plurk
 from google import genai
 from ai.persona import load_persona
 from core.config import (
@@ -24,7 +24,7 @@ from modules.fifa import (
 
 # ======== 環境變數 ========
 # 相關資訊可參考platform資料夾
-# Plurk OAuth 初始化請參考 platform/plurk.py
+# Plurk OAuth 初始化請參考 services/plurk.py
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
