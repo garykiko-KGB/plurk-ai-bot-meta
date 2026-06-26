@@ -23,7 +23,8 @@ __all__ = [
 
 def publish(content):
     print("services.plurk.publish()")
-
+    print(dir(plurk))
+    
     result = plurk.callAPI(
         "/APP/Timeline/plurkAdd",
         {
