@@ -39,7 +39,17 @@ def filter_today(matches):
             print("Anchor = IN_PLAY", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
             break
 
-    # 2. 如果沒有，就找第一場尚未開始
+    # 2. 若沒有正在比賽，就找最新一場已結束
+    if anchor_time is None:
+        for match in reversed(matches):
+            if match["status"] == "FINISHED":
+                anchor_time = datetime.fromisoformat(
+                    match["utcDate"].replace("Z", "+00:00")
+                )
+                print("Anchor = FINISHED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+                break
+
+    # 3. 如果沒有，就找第一場尚未開始
     if anchor_time is None:
         for match in matches:
             if match["status"] == "TIMED":
@@ -49,7 +59,7 @@ def filter_today(matches):
                 print("Anchor = TIMED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
                 break
 
-    # 3. 如果完全沒有，代表今天沒有比賽
+    # 4. 如果完全沒有，代表今天沒有比賽
     if anchor_time is None:
         print("今天沒有任何比賽")
         return []
@@ -106,10 +116,10 @@ def format_today(matches):
         away_score = score["away"]
 
         if home_score is None:
-            continue
-
-        lines.append(
-            f"{home} {home_score}-{away_score} {away}"
-        )
+            print(f"尚未開賽：{home} vs {away}")
+            lines.append(f"{home} vs {away}")
+        else:
+            print(f"比賽結束：{home} {home_score}-{away_score} {away}")
+            lines.append(f"{home} {home_score}-{away_score} {away}")
 
     return "\n".join(lines)
