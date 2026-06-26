@@ -26,6 +26,8 @@ def filter_today(matches):
 
     today = datetime.now(timezone.utc).date()
 
+    print("TODAY =", today)
+    
     today_matches = []
 
     for match in matches:
@@ -46,6 +48,7 @@ def filter_today(matches):
         ).date()
 
         if match_date == today:
+            print("MATCH!!", match["utcDate"])
             today_matches.append(match)
 
     return today_matches
