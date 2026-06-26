@@ -30,6 +30,17 @@ def filter_today(matches):
 
     for match in matches:
 
+        print(
+            "UTC:",
+            match["utcDate"],
+            "| status:",
+            match["status"],
+            "|",
+            match["homeTeam"]["name"],
+            "-",
+            match["awayTeam"]["name"]
+        )
+
         match_date = datetime.fromisoformat(
             match["utcDate"].replace("Z", "+00:00")
         ).date()
@@ -38,7 +49,7 @@ def filter_today(matches):
             today_matches.append(match)
 
     return today_matches
-
+    
 def format_today(matches):
     
     lines = []
