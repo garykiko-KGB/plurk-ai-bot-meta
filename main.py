@@ -4,7 +4,7 @@ import threading
 import requests
 from core.logger import log
 from flask import Flask
-from plurk_oauth import PlurkAPI
+from platform.plurk import plurk
 from google import genai
 from ai.persona import load_persona
 from core.config import (
@@ -18,29 +18,23 @@ from modules.fifa import (
     filter_today,
     format_today,
 )
+# from plurk_oauth import PlurkAPI
 # from modules.fifa import get_fixtures
 # from modules.fifa import get_worldcup_id
 
 # ======== 環境變數 ========
+# 相關資訊可參考platform資料夾
+# Plurk OAuth 初始化請參考 platform/plurk.py
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-PLURK_APP_KEY = os.environ.get("PLURK_APP_KEY")
-PLURK_APP_SECRET = os.environ.get("PLURK_APP_SECRET")
-PLURK_TOKEN = os.environ.get("PLURK_TOKEN")
-PLURK_TOKEN_SECRET = os.environ.get("PLURK_TOKEN_SECRET")
 PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
 # ======== 設定區 ========
-# KEYWORDS = ['加班', '好累', '社畜', '下班', '肝', '爆肝', '累死', '想離職', '不想上班']
-# REPLY_ONLY_TO_FRIENDS = True
-# AUTO_ADD_FRIEND = True
-# FRIEND_CACHE_UPDATE_INTERVAL = 600
+# 相關資訊可參考core資料夾
+# Bot 行為設定請參考 core/config.py
 
 # ======== 初始化 ========
 app = Flask(__name__)
 client = genai.Client(api_key=GEMINI_API_KEY)
-
-plurk = PlurkAPI(PLURK_APP_KEY, PLURK_APP_SECRET)
-plurk.authorize(PLURK_TOKEN, PLURK_TOKEN_SECRET)
 
 MY_USER_ID = int(PLURK_MY_USER_ID) if PLURK_MY_USER_ID else None
 FRIEND_IDS = set()
