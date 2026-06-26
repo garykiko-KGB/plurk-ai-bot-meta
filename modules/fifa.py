@@ -1,6 +1,6 @@
 import os
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
 
