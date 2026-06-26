@@ -16,4 +16,20 @@ plurk.authorize(
     PLURK_TOKEN_SECRET
 )
 
-__all__ = ["plurk"]
+__all__ = [
+    "plurk",
+    "publish",
+]
+
+def publish(content):
+    """
+    發送 Plurk
+    """
+
+    return plurk.callAPI(
+        "/APP/Timeline/plurkAdd",
+        {
+            "content": content,
+            "qualifier": ":"
+        }
+    )
