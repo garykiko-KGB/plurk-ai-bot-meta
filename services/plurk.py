@@ -22,14 +22,29 @@ __all__ = [
 ]
 
 def publish(content):
-    """
-    發送 Plurk
-    """
+    print("services.plurk.publish()")
 
-    return plurk.callAPI(
+    result = plurk.callAPI(
         "/APP/Timeline/plurkAdd",
         {
             "content": content,
             "qualifier": ":"
         }
     )
+
+    print(result)
+
+    return result
+
+# def publish(content):
+    """
+    發送 Plurk
+    """
+
+#     return plurk.callAPI(
+#         "/APP/Timeline/plurkAdd",
+#         {
+#             "content": content,
+#             "qualifier": ":"
+#         }
+#     )
