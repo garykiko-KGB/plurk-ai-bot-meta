@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
 
+# ==== 取得 FIFA API =====
 def get_fixtures():
 
     headers = {
@@ -22,15 +23,49 @@ def get_fixtures():
 
     return data["matches"]
 
+# ==== 找出今日比賽 ====
 def filter_today(matches):
 
-    today = datetime.now(timezone.utc).date()
+    print("開始尋找今天賽程...")
 
-    print("TODAY =", today)
-    
+    anchor_time = None
+
+    # 1. 先找正在比賽
+    for match in matches:
+        if match["status"] == "IN_PLAY":
+            anchor_time = datetime.fromisoformat(
+                match["utcDate"].replace("Z", "+00:00")
+            )
+            print("Anchor = IN_PLAY", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+            break
+
+    # 2. 如果沒有，就找第一場尚未開始
+    if anchor_time is None:
+        for match in matches:
+            if match["status"] == "TIMED":
+                anchor_time = datetime.fromisoformat(
+                    match["utcDate"].replace("Z", "+00:00")
+                )
+                print("Anchor = TIMED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+                break
+
+    # 3. 如果完全沒有，代表今天沒有比賽
+    if anchor_time is None:
+        print("今天沒有任何比賽")
+        return []
+
+    start_time = anchor_time - timedelta(hours=12)
+    end_time = anchor_time + timedelta(hours=12)
+
+    print("Window =", start_time, "~", end_time)
+
     today_matches = []
 
     for match in matches:
+
+        match_time = datetime.fromisoformat(
+            match["utcDate"].replace("Z", "+00:00")
+        )
 
         print(
             "UTC:",
@@ -43,16 +78,13 @@ def filter_today(matches):
             match["awayTeam"]["name"]
         )
 
-        match_date = datetime.fromisoformat(
-            match["utcDate"].replace("Z", "+00:00")
-        ).date()
-
-        if match_date == today:
+        if start_time <= match_time <= end_time:
             print("MATCH!!", match["utcDate"])
             today_matches.append(match)
 
     return today_matches
-    
+
+# ==== 格式化比分 ====
 def format_today(matches):
     
     lines = []
@@ -81,14 +113,3 @@ def format_today(matches):
         )
 
     return "\n".join(lines)
-
-#    print("共", len(data["matches"]), "場")
-#
-#    for match in data["matches"][:5]:
-#        home = match["homeTeam"]["name"]
-#        away = match["awayTeam"]["name"]
-#
-#        home_score = match["score"]["fullTime"]["home"] or "-"
-#        away_score = match["score"]["fullTime"]["away"] or "-"
-#
-#        print(f"{home} {home_score}-{away_score} {away}")
