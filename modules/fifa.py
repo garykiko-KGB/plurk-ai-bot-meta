@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime, timezone
 
 API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
 
@@ -21,8 +22,25 @@ def get_fixtures():
 
     return data["matches"]
 
-def format_today(matches):
+def filter_today(matches):
 
+    today = datetime.now(timezone.utc).date()
+
+    today_matches = []
+
+    for match in matches:
+
+        match_date = datetime.fromisoformat(
+            match["utcDate"].replace("Z", "+00:00")
+        ).date()
+
+        if match_date == today:
+            today_matches.append(match)
+
+    return today_matches
+
+def format_today(matches):
+    
     lines = []
 
     for match in matches:
