@@ -5,6 +5,7 @@ import requests
 from core.logger import log
 from flask import Flask
 from services.plurk import plurk
+from behavior.publisher import publish
 from google import genai
 from ai.persona import load_persona
 from core.config import (
@@ -149,6 +150,7 @@ def run_bot():
     last_friend_update = time.time()
     
     log("社畜 Bot 已啟動")
+    publish("AI Anchor 發文測試成功！")
     
     try:
         matches = get_fixtures()
