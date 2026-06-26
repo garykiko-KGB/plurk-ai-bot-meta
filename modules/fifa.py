@@ -14,18 +14,43 @@ def get_fixtures():
         headers=headers
     )
 
-    print("HTTP:", response.status_code)
+#    print("HTTP:", response.status_code)
     response.raise_for_status()
     
     data = response.json()
 
-    print("共", len(data["matches"]), "場")
+    return data["matches"]
 
-    for match in data["matches"][:5]:
+def format_today(matches):
+
+    lines = []
+
+    for match in matches:
+
         home = match["homeTeam"]["name"]
         away = match["awayTeam"]["name"]
 
-        home_score = match["score"]["fullTime"]["home"] or "-"
-        away_score = match["score"]["fullTime"]["away"] or "-"
+        score = match["score"]["fullTime"]
 
-        print(f"{home} {home_score}-{away_score} {away}")
+        home_score = score["home"]
+        away_score = score["away"]
+
+        if home_score is None:
+            continue
+
+        lines.append(
+            f"{home} {home_score}-{away_score} {away}"
+        )
+
+    return "\n".join(lines)
+
+#    print("共", len(data["matches"]), "場")
+#
+#    for match in data["matches"][:5]:
+#        home = match["homeTeam"]["name"]
+#        away = match["awayTeam"]["name"]
+#
+#        home_score = match["score"]["fullTime"]["home"] or "-"
+#        away_score = match["score"]["fullTime"]["away"] or "-"
+#
+#        print(f"{home} {home_score}-{away_score} {away}")
