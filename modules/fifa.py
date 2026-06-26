@@ -59,9 +59,15 @@ def format_today(matches):
 
     for match in matches:
 
+        print("=" * 60)
+        print(match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+        print("status =", match["status"])
+        print("score =", match["score"])
+        
         home = match["homeTeam"]["name"]
         away = match["awayTeam"]["name"]
 
+        print("score object =", match["score"])
         score = match["score"]["fullTime"]
 
         home_score = score["home"]
