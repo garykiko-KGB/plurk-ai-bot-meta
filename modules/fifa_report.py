@@ -4,6 +4,7 @@ from core.logger import log
 from modules.fifa import (
     get_fixtures,
     filter_today,
+    LIVE_STATUS,
 )
 from modules.team_name import team_zh
 
@@ -42,7 +43,7 @@ def build_daily_report():
         if status == "FINISHED":
             finished.append(match)
 
-        elif status in ("IN_PLAY", "PAUSED", "LIVE"):
+        elif status in LIVE_STATUS:
             playing.append(match)
 
         else:
