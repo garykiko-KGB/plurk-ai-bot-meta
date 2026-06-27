@@ -6,6 +6,7 @@ from core.logger import log
 from flask import Flask
 from datetime import datetime
 from services.plurk import plurk
+from services.plurk import test_friend_requests
 from behavior.publisher import publish
 from google import genai
 from ai.persona import load_persona
@@ -124,6 +125,7 @@ def check_friend_requests():
 # ======== 主迴圈 ========
 def run_bot():
     log("社畜 Bot 啟動中...")
+    log(repr(test_friend_requests()))
     
     try:
         log("準備驗證 Plurk Token")
