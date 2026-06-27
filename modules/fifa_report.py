@@ -56,7 +56,7 @@ def build_daily_report():
     lines.append(
         f"更新時間：{datetime.now(TW).strftime('%Y-%m-%d %H:%M')}（台灣時間）"
     )
-    lines.append("")
+    # lines.append("")
 
     # ===== 已完賽 =====
     if finished:
@@ -77,7 +77,7 @@ def build_daily_report():
                 f"{home} {home_score}-{away_score} {away}"
             )
 
-        lines.append("")
+        # lines.append("")
 
     # ===== 進行中 =====
     if playing:
@@ -98,7 +98,7 @@ def build_daily_report():
                 f"{home} {home_score}-{away_score} {away}"
             )
 
-        lines.append("")
+        # lines.append("")
 
     # ===== 即將開踢 =====
     if upcoming:
@@ -120,6 +120,6 @@ def build_daily_report():
                 f"{tw_time.strftime('%H:%M')}　{home} vs {away}"
             )
 
-        lines.append("")
+        # lines.append("")
 
     return "\n".join(lines)
