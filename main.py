@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 from services.plurk import plurk
 from services.plurk import test_friend_requests
 from behavior.publisher import publish
+from behavior.scheduler import run_scheduler
 from google import genai
 from ai.persona import load_persona
 from core.config import (
@@ -195,6 +196,8 @@ def run_bot():
             if time.time() - last_friend_update > FRIEND_CACHE_UPDATE_INTERVAL:
                 update_friend_cache()
                 last_friend_update = time.time()
+
+            run_scheduler()
 
             check_friend_requests()
 
