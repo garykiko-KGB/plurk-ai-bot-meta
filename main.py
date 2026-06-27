@@ -105,7 +105,10 @@ def check_friend_requests():
             user_id = req['id']
             user_name = req.get('nick_name', '某人')
             try:
-                plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
+                result = plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
+                log(type(result))
+                log(repr(result))
+#                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
                 log(f"已自動加好友：{user_name}")
                 FRIEND_IDS.add(user_id)
             except Exception as e:
@@ -121,19 +124,12 @@ def run_bot():
     
     try:
         log("準備驗證 Plurk Token")
-
         log("開始呼叫 Users/me")
-
         log(f"開始 Users/me {time.time()}")
-
         me = plurk.callAPI('/APP/Users/me')
-
         log(f"結束 Users/me {time.time()}")
-
         log("Users/me 呼叫完成")
-
         print(me)
-
         log("已取得 me 資料")
 
         global MY_USER_ID
