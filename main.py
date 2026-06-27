@@ -5,6 +5,7 @@ import requests
 from core.logger import log
 from flask import Flask
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from services.plurk import plurk
 from services.plurk import test_friend_requests
 from behavior.publisher import publish
@@ -16,14 +17,15 @@ from core.config import (
     AUTO_ADD_FRIEND,
     FRIEND_CACHE_UPDATE_INTERVAL,
 )
-from modules.fifa import (
-    get_fixtures,
-    filter_today,
-    format_today,
-)
+from modules.fifa_report import build_daily_report
+
+# from modules.fifa import (get_fixtures, filter_today, format_today,)
 # from plurk_oauth import PlurkAPI
 # from modules.fifa import get_fixtures
 # from modules.fifa import get_worldcup_id
+
+# ======== 設定時區 ========
+TW = ZoneInfo("Asia/Taipei")
 
 # ======== 環境變數 ========
 # 相關資訊可參考platform資料夾
@@ -160,13 +162,14 @@ def run_bot():
     log("社畜 Bot 已啟動")
     publish(
         f"AI Anchor 發文測試成功！\n"
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}"
+        f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
     )
     
     try:
-        matches = get_fixtures()
-        today = filter_today(matches)
-        report = format_today(today)
+        report = build_daily_report()
+#         matches = get_fixtures()
+#         today = filter_today(matches)
+#         report = format_today(today)
 
         if report:
             log("=== 今日 FIFA 戰報 ===")
