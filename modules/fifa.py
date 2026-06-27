@@ -95,6 +95,7 @@ def filter_today(matches):
     return today_matches
 
 # ==== 格式化比分 ====
+"""
 def format_today(matches):
     
     lines = []
@@ -123,3 +124,4 @@ def format_today(matches):
             lines.append(f"{home} {home_score}-{away_score} {away}")
 
     return "\n".join(lines)
+"""
