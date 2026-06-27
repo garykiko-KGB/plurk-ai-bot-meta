@@ -4,6 +4,7 @@ import threading
 import requests
 from core.logger import log
 from flask import Flask
+from datetime import datetime
 from services.plurk import plurk
 from behavior.publisher import publish
 from google import genai
@@ -150,7 +151,10 @@ def run_bot():
     last_friend_update = time.time()
     
     log("社畜 Bot 已啟動")
-    publish("AI Anchor 發文測試成功！")
+    publish(
+        f"AI Anchor 發文測試成功！\n"
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}"
+    )
     
     try:
         matches = get_fixtures()
