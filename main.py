@@ -172,14 +172,14 @@ def run_bot():
         f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
     )
    
-    print("A：publish 完成")
+    print("A：publish 完成", flush=True)
 
-    raise Exception("STOP HERE")    
+#     raise Exception("STOP HERE")    
     
     try:
         report = build_daily_report()
 
-        print("B：build_daily_report 完成")
+        print("B：build_daily_report 完成", flush=True)
         print("=== 今日 FIFA 戰報 ===")
         print(report)
 #         log("=== 今日 FIFA 戰報 ===")
