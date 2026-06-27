@@ -167,15 +167,11 @@ def run_bot():
     
     try:
         report = build_daily_report()
-#         matches = get_fixtures()
-#         today = filter_today(matches)
-#         report = format_today(today)
 
-        if report:
-            log("=== 今日 FIFA 戰報 ===")
-            log("\n" + report)
-        else:
-            log("今天沒有已完成比賽")
+        print("=== 今日 FIFA 戰報 ===")
+        print(report)
+#         log("=== 今日 FIFA 戰報 ===")
+#         log("\n" + report)
 
     except Exception as e:
         log(f"FIFA Error: {e}")
