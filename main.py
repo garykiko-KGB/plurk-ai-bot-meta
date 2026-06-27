@@ -181,7 +181,7 @@ def run_bot():
 
         print("B：build_daily_report 完成", flush=True)
         print("=== 今日 FIFA 戰報 ===")
-        print(report)
+        print(report, flush=True)
 #         log("=== 今日 FIFA 戰報 ===")
 #         log("\n" + report)
 
