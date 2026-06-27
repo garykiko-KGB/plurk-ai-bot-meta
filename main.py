@@ -171,8 +171,10 @@ def run_bot():
         f"AI Anchor 發文測試成功！\n"
         f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
     )
-    
+   
     print("A：publish 完成")
+
+    raise Exception("STOP HERE")    
     
     try:
         report = build_daily_report()
