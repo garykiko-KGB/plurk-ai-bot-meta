@@ -114,4 +114,3 @@ def build_daily_report():
         lines.append("")
 
     return "\n".join(lines)
-```
