@@ -62,7 +62,8 @@ def test_friend_requests():
 
         # 如果 plurk_oauth 有留下 error，就一起印
         try:
-            print("plurk.error =", repr(plurk.error))
+            print("plurk.error() =", plurk.error())
+#            print("plurk.error =", repr(plurk.error))
         except:
             pass
 
