@@ -126,12 +126,19 @@ def check_friend_requests():
 
 # ======== 主迴圈 ========
 def run_bot():
+
+    print("run_bot START")
+
     log("社畜 Bot 啟動中...")
+
+    print("before test_friend_requests")
 
     try:
         log(repr(test_friend_requests()))
     except Exception as e:
         log(f"test_friend_requests FAILED: {e}")
+
+    print("after test_friend_requests")
 
 #    log(repr(test_friend_requests()))
     
