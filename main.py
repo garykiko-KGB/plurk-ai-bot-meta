@@ -165,16 +165,22 @@ def run_bot():
         f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
     )
     
+    print("A：publish 完成")
+    
     try:
         report = build_daily_report()
 
+        print("B：build_daily_report 完成")
         print("=== 今日 FIFA 戰報 ===")
         print(report)
 #         log("=== 今日 FIFA 戰報 ===")
 #         log("\n" + report)
 
     except Exception as e:
-        log(f"FIFA Error: {e}")
+        print(f"FIFA Error: {e}")
+#         log(f"FIFA Error: {e}")
+
+    
     
 #    get_fixtures()
 #    get_worldcup_id()
