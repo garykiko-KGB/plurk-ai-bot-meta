@@ -1,6 +1,7 @@
 import os
 import requests
 from datetime import datetime, timezone, timedelta
+from core.logger import log
 
 API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
 
@@ -29,7 +30,7 @@ def get_fixtures():
 # ===== 找出今日比賽 =====
 def filter_today(matches):
 
-    print("開始尋找今天賽程...")
+    log("開始尋找今天賽程...")
 
     anchor_time = None
 
@@ -39,7 +40,7 @@ def filter_today(matches):
             anchor_time = datetime.fromisoformat(
                 match["utcDate"].replace("Z", "+00:00")
             )
-            print("Anchor = IN_PLAY", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+            log("Anchor = IN_PLAY", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
             break
 
     # 2. 若沒有正在比賽，就找最新一場已結束
@@ -49,7 +50,7 @@ def filter_today(matches):
                 anchor_time = datetime.fromisoformat(
                     match["utcDate"].replace("Z", "+00:00")
                 )
-                print("Anchor = FINISHED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+                log("Anchor = FINISHED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
                 break
 
     # 3. 如果沒有，就找第一場尚未開始
@@ -59,18 +60,18 @@ def filter_today(matches):
                 anchor_time = datetime.fromisoformat(
                     match["utcDate"].replace("Z", "+00:00")
                 )
-                print("Anchor = TIMED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
+                log("Anchor = TIMED", match["homeTeam"]["name"], "-", match["awayTeam"]["name"])
                 break
 
     # 4. 如果完全沒有，代表今天沒有比賽
     if anchor_time is None:
-        print("今天沒有任何比賽")
+        log("今天沒有任何比賽")
         return []
 
     start_time = anchor_time - timedelta(hours=12)
     end_time = anchor_time + timedelta(hours=12)
 
-    print("Window =", start_time, "~", end_time)
+    log("Window =", start_time, "~", end_time)
 
     today_matches = []
 
@@ -80,7 +81,7 @@ def filter_today(matches):
             match["utcDate"].replace("Z", "+00:00")
         )
 
-        print(
+        log(
             "UTC:",
             match["utcDate"],
             "| status:",
@@ -92,7 +93,7 @@ def filter_today(matches):
         )
 
         if start_time <= match_time <= end_time:
-            print("MATCH!!", match["utcDate"])
+            log("MATCH!!", match["utcDate"])
             today_matches.append(match)
 
     return today_matches
