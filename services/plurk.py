@@ -19,9 +19,13 @@ plurk.authorize(
 __all__ = [
     "plurk",
     "publish",
+    "test_friend_requests",
 ]
 
 def publish(content):
+    """
+    發送 Plurk
+    """
     print("services.plurk.publish()")
     print(dir(plurk))
     
@@ -39,15 +43,6 @@ def publish(content):
 
     return result
 
-# def publish(content):
-    """
-    發送 Plurk
-    """
-
-#     return plurk.callAPI(
-#         "/APP/Timeline/plurkAdd",
-#         {
-#             "content": content,
-#             "qualifier": ":"
-#         }
-#     )
+def test_friend_requests():
+    return plurk.callAPI("/APP/FriendsFans/getFriendRequests")
+    
