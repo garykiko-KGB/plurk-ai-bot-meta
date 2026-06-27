@@ -171,25 +171,18 @@ def run_bot():
         f"AI Anchor 發文測試成功！\n"
         f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
     )
-   
-    print("A：publish 完成", flush=True)
 
-#     raise Exception("STOP HERE")    
-    
     try:
         report = build_daily_report()
 
-        print("B：build_daily_report 完成", flush=True)
-        print("=== 今日 FIFA 戰報 ===")
+        print("=== 今日 FIFA 戰報 ===", flush=True)
         print(report, flush=True)
-#         log("=== 今日 FIFA 戰報 ===")
-#         log("\n" + report)
+        log("=== 今日 FIFA 戰報 ===")
+        log("\n" + report)
 
     except Exception as e:
         print(f"FIFA Error: {e}")
-#         log(f"FIFA Error: {e}")
-
-    
+        log(f"FIFA Error: {e}")
     
 #    get_fixtures()
 #    get_worldcup_id()
