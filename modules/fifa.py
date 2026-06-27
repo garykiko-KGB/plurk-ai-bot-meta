@@ -4,7 +4,10 @@ from datetime import datetime, timezone, timedelta
 
 API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
 
-# ==== 取得 FIFA API =====
+# ===== 設定開賽字詞 =====
+LIVE_STATUS = ("IN_PLAY", "LIVE", "PAUSED")
+
+# ===== 取得 FIFA API =====
 def get_fixtures():
 
     headers = {
@@ -23,7 +26,7 @@ def get_fixtures():
 
     return data["matches"]
 
-# ==== 找出今日比賽 ====
+# ===== 找出今日比賽 =====
 def filter_today(matches):
 
     print("開始尋找今天賽程...")
@@ -32,7 +35,7 @@ def filter_today(matches):
 
     # 1. 先找正在比賽
     for match in matches:
-        if match["status"] == "IN_PLAY":
+        if match["status"] in LIVE_STATUS:
             anchor_time = datetime.fromisoformat(
                 match["utcDate"].replace("Z", "+00:00")
             )
@@ -94,7 +97,7 @@ def filter_today(matches):
 
     return today_matches
 
-# ==== 格式化比分 ====
+# ===== 格式化比分 =====
 """
 def format_today(matches):
     
