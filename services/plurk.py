@@ -44,5 +44,31 @@ def publish(content):
     return result
 
 def test_friend_requests():
-    return plurk.callAPI("/APP/FriendsFans/getFriendRequests")
+    print("===== test_friend_requests =====")
+
+    try:
+        result = plurk.callAPI("/APP/FriendsFans/getFriendRequests")
+
+        print("SUCCESS")
+        print(type(result))
+        print(repr(result))
+
+        return result
+
+    except Exception as e:
+        print("FAILED")
+        print(type(e))
+        print(repr(e))
+
+        # 如果 plurk_oauth 有留下 error，就一起印
+        try:
+            print("plurk.error =", repr(plurk.error))
+        except:
+            pass
+
+        raise
+
+
+# def test_friend_requests():
+#     return plurk.callAPI("/APP/FriendsFans/getFriendRequests")
     
