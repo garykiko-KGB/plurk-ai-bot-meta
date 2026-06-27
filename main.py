@@ -96,6 +96,9 @@ def check_friend_requests():
         return
     try:
         requests_data = plurk.callAPI('/APP/FriendsFans/getFriendRequests')
+
+        log(type(requests_data))
+        log(repr(requests_data))
         
         log(f"type = {type(requests_data)}")
         log(f"repr = {repr(requests_data)}")
