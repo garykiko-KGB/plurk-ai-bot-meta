@@ -27,21 +27,29 @@ def publish(content):
     發送 Plurk
     """
     print("services.plurk.publish()")
-    print(dir(plurk))
+#     print(dir(plurk))
     
-    result = plurk.callAPI(
-        "/APP/Timeline/plurkAdd",
-        {
-            "content": content,
-            "qualifier": ":"
-        }
-    )
+    try:
+        result = plurk.callAPI(
+            "/APP/Timeline/plurkAdd",
+            {
+                "content": content,
+                "qualifier": ":"
+            }
+        )
 
-    print("callAPI 已回傳")
-    print(type(result))
-    print(repr(result))
+        print("callAPI 已回傳")
+        print(type(result))
+        print(repr(result))
 
-    return result
+        return True
+
+    except Exception as e:
+
+        print("publish FAILED")
+        print(repr(e))
+
+        return False
 
 def test_friend_requests():
     print("===== test_friend_requests =====")
