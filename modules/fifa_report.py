@@ -1,10 +1,10 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
 from modules.fifa import (
     get_fixtures,
     filter_today,
 )
+from modules.team_name import team_zh
 
 # ===== 台灣時區 =====
 TW = ZoneInfo("Asia/Taipei")
@@ -56,8 +56,8 @@ def build_daily_report():
 
         for match in finished:
 
-            home = match["homeTeam"]["name"]
-            away = match["awayTeam"]["name"]
+            home = team_zh(match["homeTeam"]["name"])
+            away = team_zh(match["awayTeam"]["name"])
 
             score = match["score"]["fullTime"]
 
@@ -77,8 +77,8 @@ def build_daily_report():
 
         for match in playing:
 
-            home = match["homeTeam"]["name"]
-            away = match["awayTeam"]["name"]
+            home = team_zh(match["homeTeam"]["name"])
+            away = team_zh(match["awayTeam"]["name"])
 
             score = match["score"]["fullTime"]
 
@@ -98,8 +98,8 @@ def build_daily_report():
 
         for match in upcoming:
 
-            home = match["homeTeam"]["name"]
-            away = match["awayTeam"]["name"]
+            home = team_zh(match["homeTeam"]["name"])
+            away = team_zh(match["awayTeam"]["name"])
 
             utc_time = datetime.fromisoformat(
                 match["utcDate"].replace("Z", "+00:00")
