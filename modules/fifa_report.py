@@ -1,5 +1,6 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from core.logger import log
 from modules.fifa import (
     get_fixtures,
     filter_today,
@@ -30,11 +31,18 @@ def build_daily_report():
     for match in today_matches:
 
         status = match["status"]
+        
+        # 以下是蒐集 API 真正所有會回傳的 status
+        home = match["homeTeam"]["name"]
+        away = match["awayTeam"]["name"]
 
+        log(f"{home} vs {away} -> {status}")
+        # 以上是蒐集 API 真正所有會回傳的 status
+        
         if status == "FINISHED":
             finished.append(match)
 
-        elif status in ("IN_PLAY", "PAUSED"):
+        elif status in ("IN_PLAY", "PAUSED", "LIVE"):
             playing.append(match)
 
         else:
