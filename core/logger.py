@@ -1,2 +1,6 @@
-def log(message):
-    print(message)
+from core.config import DEBUG
+
+def log(*args):
+    if DEBUG:
+        print(*args)
+        
