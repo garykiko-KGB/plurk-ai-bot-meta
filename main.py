@@ -115,11 +115,33 @@ def check_friend_requests():
 
         alerts = get_alerts()
 
-        print("CFR-4 after get_alerts", flush=True)
-        print(type(alerts), flush=True)
-        print(repr(alerts), flush=True)
+        if not alerts:
+            return
 
-        return
+        print("CFR-4 after get_alerts", flush=True)
+
+        for alert in alerts:
+
+            print("CFR-5 check friendship_request", flush=True)
+
+            if alert.get("type") != "friendship_request":
+                continue
+
+            user = alert["from_user"]
+
+            print(user, flush=True)
+
+            user_id = user["id"]
+            user_name = user.get("nick_name", "Unknown")
+
+            print(f"接受好友：{user_name} ({user_id})", flush=True)
+
+            result = accept_friend_request(user_id)
+
+            print(type(result), flush=True)
+            print(repr(result), flush=True)
+
+            FRIEND_IDS.add(user_id)
 
     except Exception as e:
         print(type(e), flush=True)
