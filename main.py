@@ -8,10 +8,11 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from services.plurk import (
     plurk,
-    get_friend_requests,
-    become_friend,
+    get_alerts,
+    accept_friend_request,
+    deny_friend_request,
+    accept_all_friend_requests,
     get_friends,
-#     test_friend_requests,
 )
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
@@ -101,66 +102,29 @@ def update_friend_cache():
 
 # ======== 自動加好友 ========
 def check_friend_requests():
+
     print("CFR-1 enter", flush=True)
-    
+
     if not AUTO_ADD_FRIEND:
         print("CFR-2 auto add off", flush=True)
         return
+
     try:
-        print("CFR-3 before get_friend_requests", flush=True)
-        requests_data = get_friend_requests()
-        print("CFR-4 after get_friend_requests", flush=True)
-        print(type(requests_data), flush=True)
-        
-        log("===== Friend Requests =====")
-        log(type(requests_data))
-        log(repr(requests_data))
-        
-        log(f"type = {type(requests_data)}")
-        log(f"repr = {repr(requests_data)}")
-        log(f"value = {requests_data}")
 
-        if not requests_data:
-            print("CFR-4-1 no friend requests", flush=True)
-            log("目前沒有待處理好友申請")
-            return
+        print("CFR-3 before get_alerts", flush=True)
 
-        print("CFR-5 before for", flush=True)
-        for req in requests_data:
-            print("CFR-6 in for", flush=True)
-            log(type(req))
-            log(repr(req))
-            
-            user_id = req['id']
-            user_name = req.get('nick_name', '某人')
+        alerts = get_alerts()
 
-            print("CFR-7 before become_friend", flush=True)
-            result = become_friend(user_id)
-            print("CFR-8 after become_friend", flush=True)
+        print("CFR-4 after get_alerts", flush=True)
+        print(type(alerts), flush=True)
+        print(repr(alerts), flush=True)
 
-            log(type(result))
-            log(repr(result))
+        return
 
-            log(f"已自動加好友：{user_name}")
-            FRIEND_IDS.add(user_id)
-
-#             try:
-#                 result = become_friend(user_id)
-#                 log(type(result))
-#                 log(repr(result))
-#                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
-#                 log(f"已自動加好友：{user_name}")
-#                 FRIEND_IDS.add(user_id)
-#             except Exception as e:
-#                 log(f"加好友失敗 {user_name}：{e}")
-    
     except Exception as e:
         print(type(e), flush=True)
         print(repr(e), flush=True)
         print("CFR-ERROR", flush=True)
-        log(f"Exception Type: {type(e).__name__}")
-        log(f"Exception Detail: {repr(e)}")
-        log(f"檢查好友邀請失敗：{e}")
 
 # ======== 主迴圈 ========
 def run_bot():
