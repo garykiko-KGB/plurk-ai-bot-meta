@@ -154,18 +154,7 @@ def run_bot():
     print("run_bot START")
 
     log("社畜 Bot 啟動中...")
-
-#     print("before test_friend_requests")
-
-#     try:
-#         log(repr(test_friend_requests()))
-#     except Exception as e:
-#         log(f"test_friend_requests FAILED: {e}")
-
-#     print("after test_friend_requests")
-
-#     log(repr(test_friend_requests()))
-    
+   
     try:
         log("準備驗證 Plurk Token")
         log("開始呼叫 Users/me")
@@ -208,8 +197,6 @@ def run_bot():
         print(f"FIFA Error: {e}")
         log(f"FIFA Error: {e}")
     
-#    get_fixtures()
-#    get_worldcup_id()
     log(f"關鍵字：{KEYWORDS}")
     log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
@@ -222,13 +209,15 @@ def run_bot():
 
             run_scheduler()
 
-            log(">>> before check_friend_requests")
-            
+            print("A >>> before check_friend_requests")
+
             check_friend_requests()
 
-            log(">>> after check_friend_requests")
+            print("B >>> after check_friend_requests, before Timeline/getPlurks")
 
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
+
+            print("C >>> Timeline/getPlurks is OK")
 
             # 取出真正的噗文列表
             plurks = plurks['plurks']
@@ -256,9 +245,7 @@ def run_bot():
                 log(f"噗 {plurk_id}：共有 {len(responses)} 則回應，已回覆={already_replied}")
                 if already_replied:
                     continue
-                    
-                # print(response)
-
+                
                 if REPLY_ONLY_TO_FRIENDS and user_id not in FRIEND_IDS:
                     continue
 
@@ -271,8 +258,8 @@ def run_bot():
                             'qualifier': ':'
                         })
                         log(f"已回覆 {plurk_id}：{reply_text}")
-                        # REPLIED_PLURK_IDS.add(plurk_id)
                         time.sleep(3)
+                        
                     except Exception as e:
                         log(f"回覆失敗 {plurk_id}：{e}")
 
