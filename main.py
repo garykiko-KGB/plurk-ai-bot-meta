@@ -222,7 +222,11 @@ def run_bot():
 
             run_scheduler()
 
+            log(">>> before check_friend_requests")
+            
             check_friend_requests()
+
+            log(">>> after check_friend_requests")
 
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
 
