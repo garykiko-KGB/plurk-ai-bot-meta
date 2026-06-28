@@ -14,7 +14,12 @@ def publish(content):
     print("publisher() 被呼叫", flush=True)
     log("publisher() 被呼叫")
 
-    if not can_post():
+    allow = can_post()
+    
+    print(f"can_post = {allow}", flush=True)
+    log(f"can_post = {allow}")
+    
+    if not allow:
         print("RateLimiter：冷卻中，取消發文", flush=True)
         log("RateLimiter：冷卻中，取消發文")
         return False
