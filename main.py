@@ -105,26 +105,44 @@ def check_friend_requests():
         return
     try:
         requests_data = get_friend_requests()
-
+        
+        log("===== Friend Requests =====")
         log(type(requests_data))
         log(repr(requests_data))
         
         log(f"type = {type(requests_data)}")
         log(f"repr = {repr(requests_data)}")
         log(f"value = {requests_data}")
-        
+
+        if not requests_data:
+            log("目前沒有待處理好友申請")
+            return
+            
         for req in requests_data:
+            log(type(req))
+            log(repr(req))
+            
             user_id = req['id']
             user_name = req.get('nick_name', '某人')
-            try:
-                result = become_friend(user_id)
-                log(type(result))
-                log(repr(result))
+
+            result = become_friend(user_id)
+
+            log(type(result))
+            log(repr(result))
+
+            log(f"已自動加好友：{user_name}")
+            FRIEND_IDS.add(user_id)
+
+#             try:
+#                 result = become_friend(user_id)
+#                 log(type(result))
+#                 log(repr(result))
 #                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
-                log(f"已自動加好友：{user_name}")
-                FRIEND_IDS.add(user_id)
-            except Exception as e:
-                log(f"加好友失敗 {user_name}：{e}")
+#                 log(f"已自動加好友：{user_name}")
+#                 FRIEND_IDS.add(user_id)
+#             except Exception as e:
+#                 log(f"加好友失敗 {user_name}：{e}")
+    
     except Exception as e:
         log(f"Exception Type: {type(e).__name__}")
         log(f"Exception Detail: {repr(e)}")
