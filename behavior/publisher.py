@@ -25,7 +25,7 @@ def publish(content):
 
     if result:
         print("publisher() 發文成功，更新冷卻時間", flush=True)
-        log("publisher() 發文成功，更新冷卻時間"))
+        log("publisher() 發文成功，更新冷卻時間")
         record_post()
     else:
         print("publisher() 發文失敗", flush=True)
