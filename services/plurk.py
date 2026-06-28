@@ -19,9 +19,13 @@ plurk.authorize(
 __all__ = [
     "plurk",
     "publish",
+    "get_friend_requests",
+    "become_friend",
+    "get_friends",
     "test_friend_requests",
 ]
 
+# ===== 發文 =====
 def publish(content):
     """
     發送 Plurk
@@ -51,6 +55,33 @@ def publish(content):
 
         return False
 
+# ===== 好友 =====
+def get_friend_requests():
+
+    return plurk.callAPI(
+        "/APP/FriendsFans/getFriendRequests"
+    )
+
+def become_friend(user_id):
+
+    return plurk.callAPI(
+        "/APP/FriendsFans/becomeFriend",
+        {
+            "user_id": user_id
+        }
+    )
+
+def get_friends(user_id):
+
+    return plurk.callAPI(
+        "/APP/FriendsFans/getFriendsByOffset",
+        {
+            "user_id": user_id,
+            "limit": 1000
+        }
+    )
+
+# ===== 測試 =====
 def test_friend_requests():
     print("===== test_friend_requests =====")
 
