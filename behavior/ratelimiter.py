@@ -1,3 +1,8 @@
+"""
+AI Anchor 發文限流器
+
+避免廢文太多被ban掉。
+"""
 import time
 from core.config import (
     POST_COOLDOWN_NORMAL,
