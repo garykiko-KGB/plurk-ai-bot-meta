@@ -177,6 +177,7 @@ def run_bot():
     last_friend_update = time.time()
     
     log("社畜 Bot 已啟動")
+    print("===== 第一次呼叫publish() =====", flush=True)
     publish(
         f"AI Anchor 發文測試成功！\n"
         f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
@@ -197,6 +198,14 @@ def run_bot():
     log(f"關鍵字：{KEYWORDS}")
     log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
+    # 測試第二次呼叫publish()
+    print("===== 第二次呼叫publish() =====", flush=True)
+    result = publish(
+        f"AI Anchor 發文測試成功！\n"
+        f"{datetime.now(TW).strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    print(f"第二次 publish() 回傳：{result}", flush=True)
+    
     while True:
         print("===== while 開始 =====", flush=True)
         log("===== while 開始 =====")
