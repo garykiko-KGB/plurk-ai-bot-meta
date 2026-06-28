@@ -85,9 +85,7 @@ def send_friend_request(user_id):
 
     return plurk.callAPI(
         "/APP/FriendsFans/becomeFriend",
-        {
-            "user_id": user_id
-        }
+        {"user_id": user_id}
     )
 
 
