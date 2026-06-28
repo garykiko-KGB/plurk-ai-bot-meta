@@ -201,7 +201,9 @@ def run_bot():
     log(f"好友限定：{REPLY_ONLY_TO_FRIENDS} ｜ 自動加好友：{AUTO_ADD_FRIEND}")
 
     while True:
+        print("===== while 開始 =====", flush=True)
         log("===== while 開始 =====")
+
         try:
             if time.time() - last_friend_update > FRIEND_CACHE_UPDATE_INTERVAL:
                 update_friend_cache()
@@ -263,6 +265,7 @@ def run_bot():
                     except Exception as e:
                         log(f"回覆失敗 {plurk_id}：{e}")
 
+            print("===== while 結束 =====", flush=True)
             log("===== while 結束 =====")
             time.sleep(30)
 
