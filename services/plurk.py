@@ -63,37 +63,22 @@ def publish(content):
 
 # ===== 通知Alerts =====
 def get_alerts():
-
-    return plurk.callAPI(
-        "/APP/Alerts/getActive"
-    )
-
+    return plurk.callAPI("/APP/Alerts/getActive")
 
 def accept_friend_request(user_id):
-
     return plurk.callAPI(
         "/APP/Alerts/addAsFriend",
-        {
-            "user_id": user_id
-        }
+        {"user_id": user_id}
     )
-
 
 def deny_friend_request(user_id):
-
     return plurk.callAPI(
         "/APP/Alerts/denyFriendship",
-        {
-            "user_id": user_id
-        }
+        {"user_id": user_id}
     )
-
 
 def accept_all_friend_requests():
-
-    return plurk.callAPI(
-        "/APP/Alerts/addAllAsFriends"
-    )
+    return plurk.callAPI("/APP/Alerts/addAllAsFriends")
 
 # ===== 好友Friends =====
 def send_friend_request(user_id):
