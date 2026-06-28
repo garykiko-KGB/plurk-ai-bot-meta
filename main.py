@@ -101,10 +101,16 @@ def update_friend_cache():
 
 # ======== 自動加好友 ========
 def check_friend_requests():
+    print("CFR-1 enter", flush=True)
+    
     if not AUTO_ADD_FRIEND:
+        print("CFR-2 auto add off", flush=True)
         return
     try:
+        print("CFR-3 before get_friend_requests", flush=True)
         requests_data = get_friend_requests()
+        print("CFR-4 after get_friend_requests", flush=True)
+        print(type(requests_data), flush=True)
         
         log("===== Friend Requests =====")
         log(type(requests_data))
@@ -115,17 +121,22 @@ def check_friend_requests():
         log(f"value = {requests_data}")
 
         if not requests_data:
+            print("CFR-4-1 no friend requests", flush=True)
             log("目前沒有待處理好友申請")
             return
-            
+
+        print("CFR-5 before for", flush=True)
         for req in requests_data:
+            print("CFR-6 in for", flush=True)
             log(type(req))
             log(repr(req))
             
             user_id = req['id']
             user_name = req.get('nick_name', '某人')
 
+            print("CFR-7 before become_friend", flush=True)
             result = become_friend(user_id)
+            print("CFR-8 after become_friend", flush=True)
 
             log(type(result))
             log(repr(result))
@@ -144,6 +155,9 @@ def check_friend_requests():
 #                 log(f"加好友失敗 {user_name}：{e}")
     
     except Exception as e:
+        print(type(e), flush=True)
+        print(repr(e), flush=True)
+        print("CFR-ERROR", flush=True)
         log(f"Exception Type: {type(e).__name__}")
         log(f"Exception Detail: {repr(e)}")
         log(f"檢查好友邀請失敗：{e}")
