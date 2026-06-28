@@ -11,7 +11,7 @@ from services.plurk import (
     get_friend_requests,
     become_friend,
     get_friends,
-    test_friend_requests,
+#     test_friend_requests,
 )
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
@@ -137,16 +137,16 @@ def run_bot():
 
     log("社畜 Bot 啟動中...")
 
-    print("before test_friend_requests")
+#     print("before test_friend_requests")
 
-    try:
-        log(repr(test_friend_requests()))
-    except Exception as e:
-        log(f"test_friend_requests FAILED: {e}")
+#     try:
+#         log(repr(test_friend_requests()))
+#     except Exception as e:
+#         log(f"test_friend_requests FAILED: {e}")
 
-    print("after test_friend_requests")
+#     print("after test_friend_requests")
 
-#    log(repr(test_friend_requests()))
+#     log(repr(test_friend_requests()))
     
     try:
         log("準備驗證 Plurk Token")
