@@ -6,8 +6,13 @@ from core.logger import log
 from flask import Flask
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from services.plurk import plurk
-from services.plurk import test_friend_requests
+from services.plurk import (
+    plurk,
+    get_friend_requests,
+    become_friend,
+    get_friends,
+    test_friend_requests,
+)
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
 from google import genai
@@ -85,7 +90,7 @@ def generate_reply(content):
 def update_friend_cache():
     global FRIEND_IDS
     try:
-        friends = plurk.callAPI('/APP/FriendsFans/getFriendsByOffset', {'user_id': MY_USER_ID, 'limit': 1000})
+        friends = get_friends(MY_USER_ID)
         print(type(friends))
         print(friends)
         
@@ -99,7 +104,7 @@ def check_friend_requests():
     if not AUTO_ADD_FRIEND:
         return
     try:
-        requests_data = plurk.callAPI('/APP/FriendsFans/getFriendRequests')
+        requests_data = get_friend_requests()
 
         log(type(requests_data))
         log(repr(requests_data))
@@ -112,7 +117,7 @@ def check_friend_requests():
             user_id = req['id']
             user_name = req.get('nick_name', '某人')
             try:
-                result = plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
+                result = become_friend(user_id)
                 log(type(result))
                 log(repr(result))
 #                 plurk.callAPI('/APP/FriendsFans/becomeFriend', {'user_id': user_id})
