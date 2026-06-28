@@ -103,50 +103,47 @@ def update_friend_cache():
 # ======== 自動加好友 ========
 def check_friend_requests():
 
-    print("CFR-1 enter", flush=True)
-
     if not AUTO_ADD_FRIEND:
-        print("CFR-2 auto add off", flush=True)
         return
 
     try:
-
-        print("CFR-3 before get_alerts", flush=True)
-
         alerts = get_alerts()
 
         if not alerts:
             return
 
-        print("CFR-4 after get_alerts", flush=True)
-
         for alert in alerts:
-
-            print("CFR-5 check friendship_request", flush=True)
 
             if alert.get("type") != "friendship_request":
                 continue
 
             user = alert["from_user"]
 
-            print(user, flush=True)
-
+            # 確認格式用，亦可直接刪掉
+            # print(user, flush=True)  
+            
+            log(repr(user))
+            
             user_id = user["id"]
             user_name = user.get("nick_name", "Unknown")
 
-            print(f"接受好友：{user_name} ({user_id})", flush=True)
+            log(f"接受好友：{user_name} ({user_id})")
 
             result = accept_friend_request(user_id)
 
-            print(type(result), flush=True)
-            print(repr(result), flush=True)
+            log(type(result))
+            log(repr(result))
 
             FRIEND_IDS.add(user_id)
 
     except Exception as e:
         print(type(e), flush=True)
         print(repr(e), flush=True)
-        print("CFR-ERROR", flush=True)
+    
+        log(f"Exception Type: {type(e).__name__}")
+        log(f"Exception Detail: {repr(e)}")
+        log(f"CFR ERROR: {e}")
+        
 
 # ======== 主迴圈 ========
 def run_bot():
@@ -211,18 +208,13 @@ def run_bot():
 
             run_scheduler()
 
-            print("A >>> before check_friend_requests")
-
             check_friend_requests()
-
-            print("B >>> after check_friend_requests, before Timeline/getPlurks")
 
             plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
 
-            print("C >>> Timeline/getPlurks is OK")
-
             # 取出真正的噗文列表
             plurks = plurks['plurks']
+            print(f"本次取得 {len(plurks)} 則噗文", flush=True)
             log(f"本次取得 {len(plurks)} 則噗文")
             
             for p in plurks:
