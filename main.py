@@ -17,6 +17,7 @@ from services.plurk import (
 from behavior.listener import listen
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
+from core.state import STATE
 from core.config import (
     KEYWORDS,
     REPLY_ONLY_TO_FRIENDS,
@@ -47,24 +48,32 @@ PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 # 相關資訊可參考 ai/reply.py
 app = Flask(__name__)
 
-
-MY_USER_ID = int(PLURK_MY_USER_ID) if PLURK_MY_USER_ID else None
-FRIEND_IDS = set()
-# REPLIED_PLURK_IDS = set()
+STATE["plurk"]["my_user_id"] = (
+    int(PLURK_MY_USER_ID)
+    if PLURK_MY_USER_ID
+    else None
+)
 
 # ======== Gemini 回覆生成 - 社畜人設 ========
 # 相關資訊可參考 ai/reply.py 
 
 # ======== 更新好友列表 ========
 def update_friend_cache():
-    global FRIEND_IDS
+    
     try:
-        friends = get_friends(MY_USER_ID)
+        friends = get_friends(
+            STATE["plurk"]["my_user_id"]
+        )
         print(type(friends))
         print(friends)
+
+        STATE["plurk"]["friend_ids"] = {
+            user["id"]
+            for user in friends
+        }
         
-        FRIEND_IDS = set([user['id'] for user in friends])
-        log(f"好友快取更新：{len(FRIEND_IDS)} 人")
+        log(f"好友快取更新：{len(STATE['plurk']['friend_ids'])} 人")
+        
     except Exception as e:
         log(f"更新好友列表失敗：{e}")
 
@@ -102,8 +111,8 @@ def check_friend_requests():
             log(type(result))
             log(repr(result))
 
-            FRIEND_IDS.add(user_id)
-
+            STATE["plurk"]["friend_ids"].add(user_id)
+            
     except Exception as e:
         print(type(e), flush=True)
         print(repr(e), flush=True)
@@ -130,11 +139,10 @@ def run_bot():
         print(me)
         log("已取得 me 資料")
 
-        global MY_USER_ID
-        MY_USER_ID = me['id']
+        STATE["plurk"]["my_user_id"] = me["id"]
 
         log(f"Plurk Token 認證成功")
-        log(f"Bot 使用者 ID: {MY_USER_ID}，Token 有效")
+        log(f"Bot 使用者 ID: {STATE['plurk']['my_user_id']}，Token 有效")
         log("===== 即將進入 while =====")
 
     except Exception as e:
