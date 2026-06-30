@@ -14,11 +14,9 @@ from services.plurk import (
     accept_all_friend_requests,
     get_friends,
 )
+from behavior.listener import listen
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
-from ai.reply import generate_reply
-# from google import genai
-# from ai.persona import load_persona
 from core.config import (
     KEYWORDS,
     REPLY_ONLY_TO_FRIENDS,
@@ -38,7 +36,7 @@ TW = ZoneInfo("Asia/Taipei")
 # ======== 環境變數 ========
 # 相關資訊可參考platform資料夾
 # Plurk OAuth 初始化請參考 services/plurk.py
-# GEMINI_API_KEY 移至 ai/reply.py
+# GEMINI_API_KEY 相關資訊可參考 ai/reply.py
 PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
 # ======== 設定區 ========
@@ -46,7 +44,7 @@ PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 # Bot 行為設定請參考 core/config.py
 
 # ======== 初始化 ========
-# client = genai.Client(api_key=GEMINI_API_KEY) 移至 ai/reply.py
+# 相關資訊可參考 ai/reply.py
 app = Flask(__name__)
 
 
@@ -55,7 +53,7 @@ FRIEND_IDS = set()
 # REPLIED_PLURK_IDS = set()
 
 # ======== Gemini 回覆生成 - 社畜人設 ========
-# 整段移至 ai/reply.py 
+# 相關資訊可參考 ai/reply.py 
 
 # ======== 更新好友列表 ========
 def update_friend_cache():
@@ -180,53 +178,9 @@ def run_bot():
 
             check_friend_requests()
 
-            plurks = plurk.callAPI('/APP/Timeline/getPlurks', {'limit': 20})
-
-            # 取出真正的噗文列表
-            plurks = plurks['plurks']
-            print(f"本次取得 {len(plurks)} 則噗文", flush=True)
-            log(f"本次取得 {len(plurks)} 則噗文")
-            
-            for p in plurks:
-                plurk_id = p['plurk_id']
-                user_id = p['owner_id']
-                content = p.get('content_raw', '')
-
-                if user_id == MY_USER_ID: 
-                    # or plurk_id in REPLIED_PLURK_IDS
-                    continue
-
-                response = plurk.callAPI(
-                    "/APP/Responses/get",
-                    {"plurk_id": plurk_id}
-                )
-
-                responses = response.get("responses", [])
-                already_replied = any(
-                    r["user_id"] == MY_USER_ID
-                    for r in responses
-                )
-                log(f"噗 {plurk_id}：共有 {len(responses)} 則回應，已回覆={already_replied}")
-                if already_replied:
-                    continue
-                
-                if REPLY_ONLY_TO_FRIENDS and user_id not in FRIEND_IDS:
-                    continue
-
-                if any(keyword in content for keyword in KEYWORDS):
-                    reply_text = generate_reply(content)
-                    try:
-                        plurk.callAPI('/APP/Responses/responseAdd', {
-                            'plurk_id': plurk_id,
-                            'content': reply_text,
-                            'qualifier': ':'
-                        })
-                        log(f"已回覆 {plurk_id}：{reply_text}")
-                        time.sleep(3)
-                        
-                    except Exception as e:
-                        log(f"回覆失敗 {plurk_id}：{e}")
-
+            # 監聽 Timeline 並自動回覆
+            listen()
+           
             print("===== while 結束 =====", flush=True)
             log("===== while 結束 =====")
             time.sleep(30)
