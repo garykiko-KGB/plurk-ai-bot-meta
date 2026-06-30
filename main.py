@@ -16,8 +16,9 @@ from services.plurk import (
 )
 from behavior.publisher import publish
 from behavior.scheduler import run_scheduler
-from google import genai
-from ai.persona import load_persona
+from ai.reply import generate_reply
+# from google import genai
+# from ai.persona import load_persona
 from core.config import (
     KEYWORDS,
     REPLY_ONLY_TO_FRIENDS,
@@ -37,7 +38,7 @@ TW = ZoneInfo("Asia/Taipei")
 # ======== 環境變數 ========
 # 相關資訊可參考platform資料夾
 # Plurk OAuth 初始化請參考 services/plurk.py
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# GEMINI_API_KEY 移至 ai/reply.py
 PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 
 # ======== 設定區 ========
@@ -45,47 +46,16 @@ PLURK_MY_USER_ID = os.environ.get("PLURK_MY_USER_ID")
 # Bot 行為設定請參考 core/config.py
 
 # ======== 初始化 ========
+# client = genai.Client(api_key=GEMINI_API_KEY) 移至 ai/reply.py
 app = Flask(__name__)
-client = genai.Client(api_key=GEMINI_API_KEY)
+
 
 MY_USER_ID = int(PLURK_MY_USER_ID) if PLURK_MY_USER_ID else None
 FRIEND_IDS = set()
 # REPLIED_PLURK_IDS = set()
 
 # ======== Gemini 回覆生成 - 社畜人設 ========
-def generate_reply(content):
-    persona = load_persona()
-    prompt = f"""{persona}
-
----
-
-以下是一位噗友發出的內容：
-
-{content}
-
----
-
-請以 AI_Anchor 的身份回覆。
-
-規則：
-
-1. 使用繁體中文
-2. 30字內
-3. 自然聊天
-4. 不要說教
-5. 不要客服語氣
-6. 不要使用「作為AI」
-7. 像 Plurk 噗友
-"""
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
-        return response.text.strip()
-    except Exception as e:
-        print(f"Gemini 錯誤：{e}")
-        return "又被叫出來了...社畜抱一個"
+# 整段移至 ai/reply.py 
 
 # ======== 更新好友列表 ========
 def update_friend_cache():
