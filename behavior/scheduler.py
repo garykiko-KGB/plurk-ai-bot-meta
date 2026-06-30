@@ -5,6 +5,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from behavior.publisher import publish
+from behavior.ratelimiter import PostPriority
 from modules.fifa_report import build_daily_report
 
 # ===== 台灣時區 =====
@@ -73,7 +74,7 @@ def run_scheduler():
     if not report:
         return
 
-    if publish(report):
+    if publish(report, priority=PostPriority.SCHEDULED):
 
         scheduler["fifa_report"] = current_slot
 
