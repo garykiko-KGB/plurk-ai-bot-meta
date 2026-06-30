@@ -29,6 +29,11 @@ __all__ = [
     # Friends
     "send_friend_request",
     "get_friends",
+
+    # Timeline
+    "get_recent_plurks",
+    "get_responses",
+    "reply",
 ]
 
 
@@ -96,5 +101,41 @@ def get_friends(user_id):
         {
             "user_id": user_id,
             "limit": 1000
+        }
+    )
+
+# ===== Timeline =====
+def get_recent_plurks(limit=20):
+
+    result = plurk.callAPI(
+        "/APP/Timeline/getPlurks",
+        {
+            "limit": limit,
+        }
+    )
+
+    return result["plurks"]
+
+
+def get_responses(plurk_id):
+
+    result = plurk.callAPI(
+        "/APP/Responses/get",
+        {
+            "plurk_id": plurk_id,
+        }
+    )
+
+    return result.get("responses", [])
+
+
+def reply(plurk_id, content):
+
+    return plurk.callAPI(
+        "/APP/Responses/responseAdd",
+        {
+            "plurk_id": plurk_id,
+            "content": content,
+            "qualifier": ":",
         }
     )
