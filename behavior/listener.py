@@ -7,7 +7,9 @@ from core.config import (
 from core.state import STATE
 
 from services.plurk import (
-    plurk,
+    get_recent_plurks,
+    get_responses,
+    reply,
 )
 
 from ai.reply import generate_reply
@@ -18,9 +20,8 @@ def listen():
     my_user_id = STATE["plurk"]["my_user_id"]
     friend_ids = STATE["plurk"]["friend_ids"]
 
-    plurks = plurk.callAPI("/APP/Timeline/getPlurks", {"limit": 20},)
-
-    plurks = plurks["plurks"]
+    # 取得 Timeline
+    plurks = get_recent_plurks()
   
     print(f"本次取得 {len(plurks)} 則噗文", flush=True)
     log(f"本次取得 {len(plurks)} 則噗文")
@@ -35,10 +36,8 @@ def listen():
         if user_id == my_user_id:
             continue
 
-        # 檢查是否已回覆
-        response = plurk.callAPI("/APP/Responses/get", {"plurk_id": plurk_id,},)
-
-        responses = response.get("responses", [])
+        # 取得Responses並檢查是否已回覆
+        responses = get_responses(plurk_id)
 
         already_replied = any(
             r["user_id"] == my_user_id
@@ -68,15 +67,8 @@ def listen():
         reply_text = generate_reply(content)
 
         try:
-
-            plurk.callAPI(
-                "/APP/Responses/responseAdd",
-                {
-                    "plurk_id": plurk_id,
-                    "content": reply_text,
-                    "qualifier": ":",
-                },
-            )
+            # 嘗試回覆
+            reply(plurk_id, reply_text)
 
             print(f"已回覆 {plurk_id}：{reply_text}", flush=True)
             log(f"已回覆 {plurk_id}：{reply_text}")
